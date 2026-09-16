@@ -36,6 +36,32 @@ async function doBackupJSON(){
     toast('備份完成');
   }catch(e){ toast('備份失敗：'+e.message,1) }
 }
+async function doFullBackupZip(){
+  if(typeof JSZip==='undefined'){toast('缺少 JSZip 套件，無法匯出',1);return}
+  toast('打包完整備份中…');
+  try{
+    const data = await fetchAllForBackup();
+    const zip = new JSZip();
+    zip.file('備份.json', JSON.stringify({exported_at:new Date().toISOString(), tables:data}, null, 0));
+    const q = v => `"${String(v==null?'':v).replace(/"/g,'""')}"`;
+    for(const t of Object.keys(data)){
+      const rows = data[t];
+      if(!rows.length){ zip.file(`csv/${t}.csv`, '﻿'); continue }
+      const cols = Object.keys(rows[0]).filter(c=>c!=='scans'&&c!=='perms'&&c!=='files'&&c!=='steps');
+      const csv = [cols.map(q).join(',')].concat(rows.map(r=>cols.map(c=>q(r[c])).join(','))).join('\r\n');
+      zip.file(`csv/${t}.csv`, '﻿'+csv);
+    }
+    const blob = await zip.generateAsync({type:'blob'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `貨運行營運系統_完整備份_${today()}.zip`;
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    localStorage.setItem(LAST_BACKUP_KEY, String(Date.now()));
+    render();
+    toast('完整備份已下載（JSON + CSV）');
+  }catch(e){ toast('備份失敗：'+e.message,1) }
+}
 async function doExportExcelZip(){
   if(typeof JSZip==='undefined'){toast('缺少 JSZip 套件，無法匯出',1);return}
   toast('打包中…');
@@ -85,13 +111,17 @@ async function doRestoreJSON(file){
 
 function maintHTML(){
   const last = localStorage.getItem(LAST_BACKUP_KEY);
+  const days = last ? Math.floor((Date.now()-Number(last))/86400000) : null;
+  const lastText = last ? `上次備份：${new Date(Number(last)).toLocaleString('zh-TW')}（${days===0?'今天':`${days} 天前`}）` : '尚未備份過';
   return `<div class="head"><h1>🛠️ 系統維護</h1><span class="sub">僅管理員可見</span></div>
   ${migrationSectionHTML()}
   <h2 style="margin-top:24px">備份與匯出</h2>
-  <p class="sub" style="margin-bottom:10px">${last?`上次備份：${new Date(Number(last)).toLocaleString('zh-TW')}`:'尚未備份過'}</p>
+  <p class="sub" style="margin-bottom:10px">${lastText}</p>
+  <p class="sub" style="margin-bottom:10px">另外建議在本機用 <code>scripts/backup.ps1</code> 定期做一次伺服器端完整備份（含所有使用者資料，不受瀏覽器/裝置限制），細節見 <code>docs/recovery.md</code>。</p>
   <div class="actions">
-    <button class="btn btn-primary" onclick="doBackupJSON()">立即備份（JSON）</button>
-    <button class="btn btn-ghost" onclick="doExportExcelZip()">匯出全部 Excel（zip）</button>
+    <button class="btn btn-primary" onclick="doFullBackupZip()">下載完整備份（JSON + CSV）</button>
+    <button class="btn btn-ghost" onclick="doBackupJSON()">只備份 JSON</button>
+    <button class="btn btn-ghost" onclick="doExportExcelZip()">只匯出 Excel（zip）</button>
   </div>
   <h2 style="margin-top:24px">還原</h2>
   <p class="sub" style="margin-bottom:10px">上傳備份 JSON，只會補上目前資料庫沒有的 id，不會覆蓋或刪除已存在的資料。</p>
