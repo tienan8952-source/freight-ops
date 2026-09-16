@@ -59,7 +59,9 @@ $headers = @{
 }
 
 try {
-  Invoke-RestMethod -Method Post -Uri "$url/rest/v1/agent_alerts" -Headers $headers -Body $payload | Out-Null
+  # Supabase 會擋掉「看起來像瀏覽器」的 secret key 請求；Invoke-RestMethod 預設的 User-Agent
+  # 會被誤判，明確帶一個非瀏覽器的 User-Agent 才不會被拒絕（401 Forbidden use of secret API key in browser）。
+  Invoke-RestMethod -Method Post -Uri "$url/rest/v1/agent_alerts" -Headers $headers -Body $payload -UserAgent 'notify.ps1/1.0' | Out-Null
   Write-Host "已送出通知：[$Level] $Title"
 } catch {
   Write-Error "送出失敗：$($_.Exception.Message)"
