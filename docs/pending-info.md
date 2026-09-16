@@ -10,14 +10,14 @@
 
 - **出現在哪份文件**：`docs/tools/supabase.md`、`docs/config-snapshot.md`
 - **標記日期**：2026-09-16
-- **狀態**：**部分回答，仍待回答**——TP-07 查證後確認：這幾項是 Supabase 帳單／專案層級資訊，只能到後台 Project Settings 看，或需要 Management API 的個人存取權杖（Personal Access Token）才能用 API 查，這個專案手上只有 anon key／service_role key（資料層級金鑰），查不到。方案／區域／用量／官方自動備份與否，仍需要使用者自己到 Supabase 後台看一眼截圖告訴我們，或提供一組有權限的 Management API token。
+- **狀態**：**已回答**——使用者 2026-09-17 確認：方案為免費方案、區域為東京。用量與是否有官方自動備份，使用者表示之後自己到後台看，不需要現在查，已在 `config-snapshot.md` 標「使用者自行確認」，不再列入待回答。
 - **已知替代方案**：TP-07 已經另外建立本機的 `scripts/backup.ps1`／`backup-storage.ps1` 自動備份機制，不依賴 Supabase 官方是否有自動備份。
 
 ## 2. GitHub repo 是否要改用 PR 流程、是否開 Dependabot／secret scanning
 
 - **出現在哪份文件**：`docs/tools/github.md`、`docs/config-snapshot.md`
 - **標記日期**：2026-09-16
-- **狀態**：**目前狀態已查清楚，是否要改仍待使用者決定**——實際查詢結果（`gh api repos/tienan8952-source/freight-ops`，2026-09-16）：`secret_scanning` 已開啟、`secret_scanning_push_protection` 已開啟、`dependabot_security_updates` 未開啟、main 分支沒有分支保護規則、目前沒有強制 PR 流程（可直接 push 到 main）。**要不要開 Dependabot、要不要加分支保護強制 PR** 是政策決定，維持待回答。
+- **狀態**：**已回答**——使用者 2026-09-17 決定維持現況：Dependabot 不開、不強制 PR 流程（連帶不加分支保護）。理由已記進 [decisions.md](decisions.md)「為什麼不開 Dependabot、不強制 PR 流程」。
 
 ## 3. gh token 到期時間
 

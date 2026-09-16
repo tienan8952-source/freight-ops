@@ -7,7 +7,10 @@
 ## Supabase
 
 - **Project 參考碼（ref）**：`ekzqrpgrxicyvaqagdjp`（從 `SUPABASE_URL` 網域推得：`https://ekzqrpgrxicyvaqagdjp.supabase.co`）
-- **方案（Free / Pro / …）、所在區域、資料庫容量與用量、是否有官方自動備份**：**未驗證**。這些是帳單／專案層級的資訊，只能到 Supabase 後台 Project Settings 看，或需要 Supabase Management API 的個人存取權杖（Personal Access Token）才能用 API 查——這個專案手上只有 anon key 和 service_role key（資料層級金鑰），沒有 Management API 權杖，查不到。已登記在 [pending-info.md](pending-info.md)。
+- **方案**：免費方案（Free）——使用者確認，2026-09-16
+- **所在區域**：東京（ap-northeast-1）——使用者確認，2026-09-16
+- **資料庫容量與用量**：**使用者自行確認**（使用者表示之後自己到後台看，不需要現在查）
+- **是否有官方自動備份**：**使用者自行確認**。附帶已知的平台通則（非本專案專屬查證）：Supabase 免費方案預設不含每日自動備份／PITR，這項是 Pro 以上方案才有的功能；若要確認目前這個專案的實際狀態，需要到後台 Database → Backups 頁面看一眼。
 - **Auth 設定**（用 anon key 打公開的 `GET /auth/v1/settings` 查到的實際狀態，2026-09-16）：
   - `disable_signup`: `false`（開放註冊）
   - `mailer_autoconfirm`: `false`（**需要 email 驗證**，對應 [docs/tools/supabase.md](tools/supabase.md) 記錄的「驗證信 10 分鐘過期」那個坑）
@@ -57,7 +60,7 @@
   - `secret_scanning_validity_checks` / `secret_scanning_non_provider_patterns`: disabled
 - **branch protection（main）**：目前**沒有設定**任何分支保護規則（`gh api .../branches/main/protection` 回 404 "Branch not protected"）
 - **merge 設定**：squash / merge commit / rebase merge 全部允許，`delete_branch_on_merge: false`
-- **是否要改用 PR 流程、要不要開 Dependabot、要不要加分支保護**：這些是政策決定，不是技術查詢，維持在 [pending-info.md](pending-info.md) 待使用者決定，這裡不替使用者做決定。
+- **是否要改用 PR 流程、要不要開 Dependabot、要不要加分支保護**：已決定維持現況——不開 Dependabot、不強制 PR 流程、不加分支保護。理由見 [decisions.md](decisions.md)「為什麼不開 Dependabot、不強制 PR 流程」。
 - **GitHub Pages**：來源 `main` 分支、根目錄 `/`，狀態 `built`，網址 `https://tienan8952-source.github.io/freight-ops/`
 
 ## gh CLI / GitHub token
