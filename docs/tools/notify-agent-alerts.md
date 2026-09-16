@@ -29,6 +29,12 @@
 - 見 `docs/tools/supabase.md`：Supabase 擋掉看起來像瀏覽器的 secret key
   請求（401），要帶自訂 User-Agent；以及 `.env` 欄位對應錯誤導致金鑰
   讀不到。
+- **中文內容寫進去會變亂碼**：從 Bash 呼叫 `powershell.exe` 執行
+  `notify.ps1` 時，中文標題／內容送到 Supabase 後變成問號亂碼（例如
+  「測試通知」變成「????」），初步判斷是 Windows PowerShell 5.1 主控台
+  編碼跟 UTF-8 轉換時遺失資訊，不影響送達本身（`level`/`resolved_at`/
+  時間戳記都正常），但會讓「執行紀錄」頁的中文內容看不懂。截至
+  2026-09-16 尚未修正，見 `docs/建置歷程.md`「額外發現」一節。
 
 ## 5. 限制與風險
 - 這是「Claude Code → 管理員」單向的回報機制，目前沒有反向管道（管理員
