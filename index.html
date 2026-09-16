@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>貨運行營運系統</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#FFFFFF;--panel:#FAFBFB;--ink:#16181D;--muted:#5C6370;--rule:#E3E5E9;--field:#F7F8F9;
+--plate:#E8B51F;--plate-ink:#141414;--brand:#13453E;--brand-ink:#FFFFFF;
+--danger:#A3302A;--ok:#1D6B4F;--warn:#8A5A00;--warnbg:#FBF0D8;--dangerbg:#FBE9E7;}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+--paper:#121417;--panel:#171A1E;--ink:#E8EAED;--muted:#9AA1AC;--rule:#2A2E34;--field:#1A1D21;
+--brand:#2E8074;--brand-ink:#08110F;--danger:#E0736C;--ok:#4FBF95;--warn:#E8B51F;--warnbg:#2B2415;--dangerbg:#2E1917;}}
+:root[data-theme="dark"]{--paper:#121417;--panel:#171A1E;--ink:#E8EAED;--muted:#9AA1AC;--rule:#2A2E34;--field:#1A1D21;
+--brand:#2E8074;--brand-ink:#08110F;--danger:#E0736C;--ok:#4FBF95;--warn:#E8B51F;--warnbg:#2B2415;--dangerbg:#2E1917;}
+*{box-sizing:border-box}html,body{margin:0;padding:0;height:100%}
+body{background:var(--paper);color:var(--ink);font-family:"Noto Sans TC",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.app{display:grid;grid-template-columns:206px 1fr;min-height:100vh}
+@media (max-width:860px){.app{grid-template-columns:1fr}}
+nav{background:var(--panel);border-right:1px solid var(--rule);padding:18px 0}
+@media (max-width:860px){nav{border-right:none;border-bottom:1px solid var(--rule);padding:12px 0}}
+nav .brand{padding:0 18px 14px;font-weight:700;font-size:16px;border-bottom:1px solid var(--rule);margin-bottom:10px}
+nav .brand small{display:block;font-weight:400;font-size:11.5px;color:var(--muted)}
+nav .brand .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle}
+nav .grp{padding:14px 18px 5px;font-size:11.5px;color:var(--muted)}
+nav a{display:block;padding:7px 18px;color:var(--ink);text-decoration:none;font-size:14.5px;cursor:pointer;border-left:3px solid transparent}
+nav a:hover{background:var(--field)}
+nav a.on{border-left-color:var(--brand);background:var(--field);font-weight:500}
+nav a .badge{float:right;background:var(--danger);color:#fff;border-radius:9px;padding:0 6px;font-size:11px;font-weight:700;line-height:17px;margin-top:3px}
+@media (max-width:860px){nav .grp{display:none}nav{display:flex;flex-wrap:wrap;gap:2px;padding:10px}nav .brand{width:100%;border:none;padding:0 8px 10px}nav a{border-left:none;border-radius:4px;padding:5px 11px;font-size:14px}nav a.on{background:var(--brand);color:var(--brand-ink)}}
+main{padding:24px 26px 70px;max-width:1500px;overflow-x:hidden}
+.head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:11px;margin-bottom:20px}
+h1{font-size:21px;font-weight:700;margin:0}
+.head .sub{color:var(--muted);font-size:13px}.head .spacer{flex:1}
+.split{display:grid;grid-template-columns:376px 1fr;gap:30px;align-items:start}
+@media (max-width:1180px){.split{grid-template-columns:1fr;gap:24px}}
+h2{font-size:14.5px;font-weight:700;margin:0 0 13px;padding-bottom:7px;border-bottom:1px solid var(--rule)}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:9px}
+.field{margin-bottom:3px}.c6{grid-column:span 6}.c12{grid-column:span 12}.c4{grid-column:span 4}
+@media (max-width:520px){.c6,.c4{grid-column:span 12}}
+label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:3px}
+label .req{color:var(--danger)}
+input,textarea,select{width:100%;padding:7px 9px;border:1px solid var(--rule);border-radius:4px;background:var(--field);color:var(--ink);font-family:inherit;font-size:15px}
+textarea{resize:vertical;min-height:54px}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--brand);outline-offset:1px;border-color:transparent}
+input.plateIn{font-family:"Roboto Mono",monospace;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+input.moneyIn{font-family:"Roboto Mono",monospace;font-weight:500;text-align:right}
+.filebox{border:1px dashed var(--rule);border-radius:4px;padding:10px;background:var(--field);text-align:center}
+.filebox input{display:none}
+.filebox button{background:none;border:1px solid var(--rule);color:var(--ink);padding:5px 13px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:13.5px}
+.filebox p{margin:6px 0 0;font-size:11.5px;color:var(--muted)}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;justify-content:center}
+.thumbs figure{margin:0;position:relative}
+.thumbs img{width:54px;height:54px;object-fit:cover;border-radius:3px;border:1px solid var(--rule);display:block}
+.thumbs .x{position:absolute;top:-6px;right:-6px;width:19px;height:19px;border-radius:50%;background:var(--danger);color:#fff;border:none;cursor:pointer;font-size:12px;line-height:19px;padding:0}
+.actions{display:flex;gap:8px;margin-top:15px}
+.btn{padding:8px 17px;border-radius:4px;border:1px solid transparent;font-family:inherit;font-size:14.5px;font-weight:500;cursor:pointer}
+.btn-primary{background:var(--brand);color:var(--brand-ink)}
+.btn-ghost{background:none;border-color:var(--rule);color:var(--ink)}
+.btn-sm{padding:5px 11px;font-size:13.5px}
+.btn:disabled{opacity:.5;cursor:default}
+.toast{margin-top:10px;font-size:13.5px;color:var(--ok);min-height:19px}
+.toast.err{color:var(--danger)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px}
+.filters .field{margin:0}.filters input,.filters select{min-width:118px}
+.summary{display:flex;gap:26px;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin-bottom:14px}
+.summary div span{display:block;font-size:11.5px;color:var(--muted)}
+.summary div strong{font-size:19px;font-weight:700;font-family:"Roboto Mono",monospace}
+.summary .alert strong{color:var(--danger)}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:500;color:var(--muted);font-size:11.5px;padding:0 9px 6px 0;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:10px 9px 10px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+th.num,td.num{text-align:right;padding-right:13px}
+td.num{font-family:"Roboto Mono",monospace;font-weight:500;white-space:nowrap}
+td .wrap2{white-space:pre-wrap;max-width:320px}
+td .meta{color:var(--muted);font-size:11.5px;margin-top:2px}
+.plate{display:inline-block;background:var(--plate);color:var(--plate-ink);font-family:"Roboto Mono",monospace;font-weight:700;font-size:13.5px;letter-spacing:.08em;padding:2px 7px;border-radius:3px;border:1.5px solid var(--plate-ink);white-space:nowrap}
+.tag{display:inline-block;border:1px solid var(--rule);border-radius:3px;padding:1px 7px;font-size:12px;white-space:nowrap}
+.tag.w{background:var(--warnbg);color:var(--warn);border-color:transparent;font-weight:500}
+.tag.d{background:var(--dangerbg);color:var(--danger);border-color:transparent;font-weight:500}
+.tag.g{background:none;color:var(--ok);border-color:var(--ok)}
+td.scans img{width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid var(--rule);cursor:pointer;margin-right:3px}
+.rowbtn{background:none;border:none;color:var(--muted);cursor:pointer;font-family:inherit;font-size:12.5px;padding:2px 4px;text-decoration:underline}
+.rowbtn:hover{color:var(--ink)}.rowbtn.del:hover{color:var(--danger)}
+.empty{padding:40px 16px;text-align:center;color:var(--muted)}
+.empty strong{display:block;color:var(--ink);font-weight:500;margin-bottom:4px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:12px;margin-bottom:24px}
+.card{border:1px solid var(--rule);border-radius:5px;padding:13px 15px}
+.card span{display:block;font-size:12.5px;color:var(--muted)}
+.card strong{display:block;font-size:25px;font-weight:700;font-family:"Roboto Mono",monospace;margin-top:2px}
+.card em{font-style:normal;font-size:12px;color:var(--muted)}
+.card.alert{border-color:var(--danger)}.card.alert strong{color:var(--danger)}
+dialog{border:none;border-radius:6px;padding:0;background:var(--paper);color:var(--ink);max-width:92vw;max-height:92vh}
+dialog::backdrop{background:rgba(0,0,0,.72)}
+dialog img{display:block;max-width:88vw;max-height:80vh}
+dialog .dlgbar{display:flex;justify-content:flex-end;padding:8px}
+footer{margin-top:36px;padding-top:13px;border-top:1px solid var(--rule);color:var(--muted);font-size:12px}
+.hint{background:var(--field);border-left:3px solid var(--brand);padding:10px 13px;font-size:13.5px;margin-bottom:18px;border-radius:0 4px 4px 0}
+.hint.bad{border-left-color:var(--danger)}
+.setup{max-width:620px;margin:40px auto}
+.setup code{background:var(--field);padding:1px 5px;border-radius:3px;font-size:13px}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid var(--rule);border-top-color:var(--brand);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app"><nav id="nav"></nav><main id="main"></main></div>
+<dialog id="viewer"><div class="dlgbar"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('viewer').close()">關閉</button></div><img id="viewerImg" alt=""></dialog>
+
+<script>
+/* ==================== 連線設定 ==================== */
+const CFG={
+  get url(){return localStorage.getItem('fops.url')||''},
+  get key(){return localStorage.getItem('fops.key')||''},
+  set(u,k){localStorage.setItem('fops.url',u.replace(/\/+$/,''));localStorage.setItem('fops.key',k)},
+  clear(){localStorage.removeItem('fops.url');localStorage.removeItem('fops.key')},
+  get ok(){return !!(this.url&&this.key)}
+};
+const TABLES=['vehicles','drivers','customers','trips','maint','petty','billing','insurance','docs'];
+let CACHE={},online=false,loadErr='';
+TABLES.forEach(t=>CACHE[t]=[]);
+
+async function api(table,method,opt={}){
+  const h={apikey:CFG.key,Authorization:'Bearer '+CFG.key,'Content-Type':'application/json'};
+  if(method!=='GET')h.Prefer='return=representation';
+  const q=opt.query||(method==='GET'?'?select=*':'');
+  const r=await fetch(`${CFG.url}/rest/v1/${table}${q}`,{method,headers:h,body:opt.body?JSON.stringify(opt.body):undefined});
+  if(!r.ok)throw new Error(`${r.status} ${(await r.text()).slice(0,200)}`);
+  return r.status===204?null:r.json();
+}
+async function loadAll(){
+  loadErr='';
+  try{
+    const res=await Promise.all(TABLES.map(t=>api(t,'GET')));
+    TABLES.forEach((t,i)=>CACHE[t]=res[i]||[]);
+    online=true;
+  }catch(e){online=false;loadErr=e.message}
+}
+
+/* ==================== 工具 ==================== */
+const $=s=>document.querySelector(s);
+const money=n=>Number(n||0).toLocaleString('zh-TW');
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function today(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
+function monthStart(){return today().slice(0,8)+'01'}
+function daysTo(d){if(!d)return null;return Math.round((new Date(d)-new Date(today()))/86400000)}
+
+/* ==================== 模組 ==================== */
+const CAT_MAINT=['定期保養','輪胎','煞車系統','引擎','變速箱／離合器','電系／電瓶','氣壓系統','液壓／油壓','冷氣','車體板金／烤漆','拖板／尾門／貨櫃鎖','定期檢驗','事故維修','其他'];
+const CAT_PETTY=['油資','過路費','停車費','耗材','餐費','文具','郵電','清潔','規費','司機零用','其他'];
+const CAT_DOC=['公文','合約','信件','切結書','報價單','其他'];
+const CAT_INS=['強制險','第三人責任險','車體險','貨物險','定期檢驗','牌照稅','燃料費','營業執照'];
+
+const M={
+  dash:{name:'總覽',icon:'📊',dash:1},
+  trips:{name:'出車報班',icon:'🚚',sum:['freight','bonus'],
+    fields:[{k:'date',t:'date',l:'日期',req:1,def:'today',c:6},
+      {k:'plate',t:'ref',ref:'vehicles',rk:'plate',l:'車號',req:1,plate:1,c:6},
+      {k:'driver',t:'ref',ref:'drivers',rk:'name',l:'駕駛',req:1,c:6},
+      {k:'customer',t:'ref',ref:'customers',rk:'name',l:'客戶',c:6},
+      {k:'from',t:'text',l:'起點',c:6},{k:'to',t:'text',l:'迄點',c:6},
+      {k:'trips',t:'number',l:'趟次',c:4},{k:'weight',t:'number',l:'噸數／件數',c:4},
+      {k:'freight',t:'number',l:'運費',money:1,c:4},
+      {k:'bonus',t:'number',l:'加班／獎金',money:1,c:6},
+      {k:'deduct',t:'number',l:'扣款',money:1,c:6},
+      {k:'note',t:'textarea',l:'備註',c:12}],
+    cols:['date','plate','driver','customer','route','trips','freight','bonus']},
+  maint:{name:'車輛維修',icon:'🔧',sum:['amount'],unpaid:'amount',
+    fields:[{k:'plate',t:'ref',ref:'vehicles',rk:'plate',l:'車號',req:1,plate:1,c:6},
+      {k:'date',t:'date',l:'進廠日期',req:1,def:'today',c:6},
+      {k:'done',t:'date',l:'完工日期',c:6},
+      {k:'driver',t:'ref',ref:'drivers',rk:'name',l:'駕駛',c:6},
+      {k:'vendor',t:'text',l:'維修廠商',free:1,c:6},
+      {k:'cat',t:'select',opts:CAT_MAINT,l:'維修類別',c:6},
+      {k:'items',t:'textarea',l:'維修項目',c:12},
+      {k:'labor',t:'number',l:'工資',money:1,c:6},
+      {k:'parts',t:'number',l:'零件費',money:1,c:6},
+      {k:'amount',t:'number',l:'合計',req:1,money:1,autosum:['labor','parts'],c:6},
+      {k:'paid',t:'select',opts:['未付','已付'],l:'付款狀態',c:6},
+      {k:'mileage',t:'number',l:'里程數',c:6},
+      {k:'next',t:'number',l:'下次保養里程',c:6},
+      {k:'invoice',t:'text',l:'發票號碼',c:12},
+      {k:'note',t:'textarea',l:'備註',c:12},
+      {k:'scans',t:'images',l:'單據照片',c:12}],
+    cols:['plate','date','cat','vendor','items','amount','mileage','paid','scans']},
+  petty:{name:'零用金',icon:'🧾',sum:['amount'],
+    fields:[{k:'date',t:'date',l:'日期',req:1,def:'today',c:6},
+      {k:'cat',t:'select',opts:CAT_PETTY,l:'分類',req:1,c:6},
+      {k:'item',t:'text',l:'品名／用途',req:1,c:12},
+      {k:'amount',t:'number',l:'金額',req:1,money:1,c:6},
+      {k:'payer',t:'text',l:'付款人',free:1,c:6},
+      {k:'plate',t:'ref',ref:'vehicles',rk:'plate',l:'相關車號',plate:1,c:6},
+      {k:'invoice',t:'text',l:'發票／收據號',c:6},
+      {k:'note',t:'textarea',l:'備註',c:12},
+      {k:'scans',t:'images',l:'收據照片',c:12}],
+    cols:['date','cat','item','payer','plate','amount','scans']},
+  billing:{name:'客戶對帳',icon:'💰',sum:['amount','tax'],unpaid:'amount',
+    fields:[{k:'date',t:'date',l:'日期',req:1,def:'today',c:6},
+      {k:'kind',t:'select',opts:['銷項','進項'],l:'類型',req:1,c:6},
+      {k:'customer',t:'ref',ref:'customers',rk:'name',l:'客戶／廠商',req:1,c:12},
+      {k:'invoice',t:'text',l:'發票號碼',c:6},
+      {k:'period',t:'text',l:'所屬期別',c:6},
+      {k:'amount',t:'number',l:'金額（未稅）',req:1,money:1,c:6},
+      {k:'tax',t:'number',l:'稅額',money:1,c:6},
+      {k:'paid',t:'select',opts:['未收','已收'],l:'收款狀態',c:6},
+      {k:'paydate',t:'date',l:'收款日',c:6},
+      {k:'note',t:'textarea',l:'備註',c:12},
+      {k:'scans',t:'images',l:'單據照片',c:12}],
+    cols:['date','kind','customer','invoice','amount','tax','paid','scans']},
+  insurance:{name:'保險／到期',icon:'📅',sum:['premium'],
+    fields:[{k:'plate',t:'ref',ref:'vehicles',rk:'plate',l:'車號',req:1,plate:1,c:6},
+      {k:'cat',t:'select',opts:CAT_INS,l:'類型',req:1,c:6},
+      {k:'company',t:'text',l:'保險公司／機關',free:1,c:6},
+      {k:'policy',t:'text',l:'保單／證號',c:6},
+      {k:'start',t:'date',l:'生效日',c:6},
+      {k:'end',t:'date',l:'到期日',req:1,c:6},
+      {k:'premium',t:'number',l:'保費／規費',money:1,c:6},
+      {k:'paid',t:'select',opts:['未付','已付'],l:'繳費狀態',c:6},
+      {k:'note',t:'textarea',l:'備註',c:12},
+      {k:'scans',t:'images',l:'保單照片',c:12}],
+    cols:['plate','cat','company','start','end','due','premium','paid','scans']},
+  docs:{name:'公文合約建檔',icon:'📁',
+    fields:[{k:'date',t:'date',l:'日期',req:1,def:'today',c:6},
+      {k:'cat',t:'select',opts:CAT_DOC,l:'類型',req:1,c:6},
+      {k:'title',t:'text',l:'主旨／標題',req:1,c:12},
+      {k:'party',t:'text',l:'來文者／對象',free:1,c:6},
+      {k:'docno',t:'text',l:'文號',c:6},
+      {k:'tags',t:'text',l:'分類標籤',c:6},
+      {k:'due',t:'date',l:'期限／到期',c:6},
+      {k:'note',t:'textarea',l:'摘要／備註',c:12},
+      {k:'scans',t:'images',l:'掃描檔',c:12}],
+    cols:['date','cat','title','party','docno','due','scans']},
+  payroll:{name:'薪資計算',icon:'🧮',payroll:1},
+  vehicles:{name:'車輛',icon:'',
+    fields:[{k:'plate',t:'text',l:'車號',req:1,plate:1,c:6},
+      {k:'vtype',t:'select',opts:['曳引車','半拖車','貨車','吊車','其他'],l:'車種',c:6},
+      {k:'driver',t:'ref',ref:'drivers',rk:'name',l:'固定駕駛',c:6},
+      {k:'status',t:'select',opts:['在用','維修中','停用'],l:'狀態',c:6},
+      {k:'note',t:'textarea',l:'備註',c:12}],
+    cols:['plate','vtype','driver','status','note']},
+  drivers:{name:'駕駛',icon:'',
+    fields:[{k:'name',t:'text',l:'姓名',req:1,c:6},
+      {k:'phone',t:'text',l:'電話',c:6},
+      {k:'base',t:'number',l:'底薪',money:1,c:6},
+      {k:'rate',t:'number',l:'趟次抽成（每趟）',money:1,c:6},
+      {k:'pct',t:'number',l:'運費抽成（％）',c:6},
+      {k:'status',t:'select',opts:['在職','離職'],l:'狀態',c:6},
+      {k:'note',t:'textarea',l:'備註',c:12}],
+    cols:['name','phone','base','rate','pct','status']},
+  customers:{name:'客戶／廠商',icon:'',
+    fields:[{k:'name',t:'text',l:'名稱',req:1,c:12},
+      {k:'tax',t:'text',l:'統一編號',c:6},
+      {k:'contact',t:'text',l:'聯絡人',c:6},
+      {k:'phone',t:'text',l:'電話',c:6},
+      {k:'kind',t:'select',opts:['客戶','廠商','兩者'],l:'屬性',c:6},
+      {k:'note',t:'textarea',l:'備註',c:12}],
+    cols:['name','tax','contact','phone','kind']},
+  setup:{name:'連線設定',icon:'⚙️',setup:1}
+};
+const COLMAP={date:'日期',plate:'車號',driver:'駕駛',customer:'客戶',route:'路線',trips:'趟次',
+freight:'運費',bonus:'加班',cat:'類別',vendor:'廠商',items:'項目',amount:'金額',mileage:'里程',
+paid:'狀態',scans:'檔案',item:'品名',payer:'付款人',kind:'類型',invoice:'發票',tax:'稅額',
+company:'公司／機關',start:'生效',end:'到期',due:'剩餘',premium:'保費',title:'主旨',party:'對象',
+docno:'文號',vtype:'車種',status:'狀態',note:'備註',name:'姓名',phone:'電話',base:'底薪',
+rate:'每趟',pct:'抽成％',contact:'聯絡人',done:'完工'};
+
+let view='dash',pending=[],editId='',autoTouched={},busy=false,F={},pMonth=today().slice(0,7);
+
+/* ==================== 導覽 ==================== */
+function renderNav(){
+  const dueN=CACHE.insurance.filter(r=>{const d=daysTo(r.end);return d!==null&&d<=30}).length;
+  const grp=(t,keys)=>`<div class="grp">${t}</div>`+keys.map(k=>{
+    const b=k==='insurance'&&dueN?`<span class="badge">${dueN}</span>`:'';
+    return `<a class="${view===k?'on':''}" onclick="go('${k}')">${M[k].icon} ${M[k].name}${b}</a>`}).join('');
+  const dot=online?'var(--ok)':'var(--danger)';
+  $('#nav').innerHTML=`<div class="brand">貨運行營運系統
+    <small><span class="dot" style="background:${dot}"></span>${online?'已連線 Supabase':'未連線'}</small></div>`
+    +`<a class="${view==='dash'?'on':''}" onclick="go('dash')">📊 總覽</a>`
+    +grp('日常作業',['trips','maint','petty','billing'])
+    +grp('建檔管理',['insurance','docs'])
+    +grp('報表',['payroll'])
+    +grp('基本資料',['vehicles','drivers','customers'])
+    +grp('系統',['setup']);
+}
+function go(k){view=k;pending=[];editId='';autoTouched={};F={};render();window.scrollTo(0,0)}
+
+/* ==================== 影像 ==================== */
+function shrink(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;
+  fr.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{const mx=1100;let w=im.width,h=im.height;
+    if(w>mx||h>mx){const r=Math.min(mx/w,mx/h);w=Math.round(w*r);h=Math.round(h*r)}
+    const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);
+    res(c.toDataURL('image/jpeg',.68))};im.src=fr.result};fr.readAsDataURL(file)})}
+async function addFiles(inp){
+  for(const f of inp.files){if(!f.type.startsWith('image/'))continue;
+    try{pending.push(await shrink(f))}catch(_){toast('有一張照片讀不進來',1)}}
+  inp.value='';drawThumbs()}
+function drawThumbs(){const el=$('#thumbs');if(!el)return;
+  el.innerHTML=pending.map((d,i)=>`<figure><img src="${d}" alt=""><button type="button" class="x" onclick="pending.splice(${i},1);drawThumbs()">×</button></figure>`).join('')}
+function zoom(src){$('#viewerImg').src=src;$('#viewer').showModal()}
+function toast(t,e){const el=$('#toast');if(!el)return;el.textContent=t;el.className='toast'+(e?' err':'');
+  if(t&&!e)setTimeout(()=>{if(el.textContent===t)el.textContent=''},4000)}
+
+/* ==================== 表單 ==================== */
+function fieldHTML(f,v){
+  const id='f_'+f.k,req=f.req?' <span class="req">*</span>':'';
+  let inp='';
+  if(f.t==='textarea')inp=`<textarea id="${id}">${esc(v)}</textarea>`;
+  else if(f.t==='select')inp=`<select id="${id}">${f.opts.map(o=>`<option${o===v?' selected':''}>${esc(o)}</option>`).join('')}</select>`;
+  else if(f.t==='ref'){
+    const opts=[...new Set(CACHE[f.ref].map(r=>r[f.rk]).filter(Boolean))].sort();
+    inp=`<input type="text" id="${id}" list="dl_${f.k}" value="${esc(v)}" autocomplete="off" class="${f.plate?'plateIn':''}">
+      <datalist id="dl_${f.k}">${opts.map(o=>`<option value="${esc(o)}">`).join('')}</datalist>`}
+  else if(f.t==='images')inp=`<div class="filebox"><input type="file" id="fileInput" accept="image/*" multiple onchange="addFiles(this)">
+      <button type="button" onclick="document.getElementById('fileInput').click()">選擇照片</button>
+      <p>可直接拍單據，會自動縮小後存起來</p><div class="thumbs" id="thumbs"></div></div>`;
+  else if(f.t==='number')inp=`<input type="number" id="${id}" value="${v==null?'':v}" class="${f.money?'moneyIn':''}"${f.autosum?` oninput="autoTouched['${f.k}']=1"`:''}${(f.k==='labor'||f.k==='parts')?' oninput="sumUp()"':''}>`;
+  else if(f.t==='date')inp=`<input type="date" id="${id}" value="${esc(v)}">`;
+  else{const opts=f.free?[...new Set(CACHE[view].map(r=>r[f.k]).filter(Boolean))].sort():[];
+    inp=`<input type="text" id="${id}" value="${esc(v)}" autocomplete="off"${f.free?` list="dl_${f.k}"`:''} class="${f.plate?'plateIn':''}">`
+      +(f.free?`<datalist id="dl_${f.k}">${opts.map(o=>`<option value="${esc(o)}">`).join('')}</datalist>`:'')}
+  return `<div class="field c${f.c||12}"><label for="${id}">${f.l}${req}</label>${inp}</div>`}
+function sumUp(){const f=M[view].fields.find(x=>x.autosum);if(!f||autoTouched[f.k])return;
+  const t=f.autosum.reduce((a,k)=>a+(Number($('#f_'+k)?.value)||0),0);
+  const el=$('#f_'+f.k);if(el&&t)el.value=t}
+function formHTML(rec){const m=M[view];
+  return `<h2>${rec?'修改':'新增'}${m.name}</h2><form onsubmit="saveRec(event)"><div class="grid">
+    ${m.fields.map(f=>{let v=rec?rec[f.k]:'';
+      if(!rec&&f.def==='today')v=today();
+      if(!rec&&f.t==='select'&&!v)v=f.opts[0];
+      return fieldHTML(f,v==null?'':v)}).join('')}
+    </div><div class="actions"><button type="submit" class="btn btn-primary" id="saveBtn">${rec?'更新':'存檔'}</button>
+    ${rec?`<button type="button" class="btn btn-ghost" onclick="go('${view}')">取消</button>`:''}</div>
+    <div class="toast" id="toast"></div></form>`}
+
+async function saveRec(e){
+  e.preventDefault();if(busy)return;
+  const m=M[view],rec={};
+  for(const f of m.fields){
+    if(f.t==='images'){rec[f.k]=pending.slice();continue}
+    let v=$('#f_'+f.k).value;
+    if(f.plate)v=v.trim().toUpperCase();else if(typeof v==='string')v=v.trim();
+    if(f.t==='number')v=v===''?null:Number(v);
+    if(f.t==='date'&&v==='')v=null;
+    if(f.req&&(v===''||v===null)){toast('請填「'+f.l+'」',1);$('#f_'+f.k).focus();return}
+    rec[f.k]=v===''?null:v}
+  busy=true;$('#saveBtn').disabled=true;toast('儲存中…');
+  try{
+    if(editId){const out=await api(view,'PATCH',{body:rec,query:`?id=eq.${editId}`});
+      const i=CACHE[view].findIndex(r=>r.id===editId);if(i>=0)CACHE[view][i]=out[0]}
+    else{const out=await api(view,'POST',{body:rec});CACHE[view].unshift(out[0])}
+    const was=!!editId;editId='';pending=[];autoTouched={};
+    render();toast(was?'已更新':'已存檔');
+  }catch(err){toast('存檔失敗：'+err.message,1)}
+  finally{busy=false;const b=$('#saveBtn');if(b)b.disabled=false}
+}
+function editRec(id){editId=id;const r=CACHE[view].find(x=>x.id===id);
+  pending=(r.scans||[]).slice();autoTouched={};
+  M[view].fields.forEach(f=>{if(f.autosum)autoTouched[f.k]=1});
+  render();window.scrollTo({top:0,behavior:'smooth'})}
+async function delRec(id){
+  if(!confirm('確定刪除這筆紀錄？'))return;
+  try{await api(view,'DELETE',{query:`?id=eq.${id}`});
+    CACHE[view]=CACHE[view].filter(r=>r.id!==id);render();toast('已刪除')}
+  catch(e){toast('刪除失敗：'+e.message,1)}}
+async function togglePaid(id){
+  const r=CACHE[view].find(x=>x.id===id);
+  const pair=view==='billing'?['未收','已收']:['未付','已付'];
+  const nv=r.paid===pair[0]?pair[1]:pair[0];
+  try{const out=await api(view,'PATCH',{body:{paid:nv},query:`?id=eq.${id}`});
+    Object.assign(r,out[0]);render()}catch(e){toast('更新失敗：'+e.message,1)}}
+
+/* ==================== 清單 ==================== */
+function setF(k,v){F[k]=v;const el=$('#listArea');if(el)el.innerHTML=listHTML()}
+function cellHTML(r,k){
+  if(k==='scans')return (r.scans||[]).map(s=>`<img src="${s}" onclick="zoom(this.src)" alt="">`).join('')||'<span style="color:var(--muted)">—</span>';
+  if(k==='plate')return r.plate?`<span class="plate">${esc(r.plate)}</span>`+(r.vtype?`<div class="meta">${esc(r.vtype)}</div>`:''):'—';
+  if(k==='route')return esc([r.from,r.to].filter(Boolean).join(' → ')||'—');
+  if(k==='cat'||k==='kind')return `<span class="tag">${esc(r[k]||'—')}</span>`;
+  if(k==='paid'){const un=r.paid==='未付'||r.paid==='未收';
+    return `<span class="tag ${un?'w':'g'}">${esc(r.paid||'—')}</span><div><button class="rowbtn" onclick="togglePaid('${r.id}')">改</button></div>`}
+  if(k==='due'){const d=daysTo(r.end);if(d===null)return '—';
+    return `<span class="tag ${d<0?'d':d<=30?'w':''}">${d<0?'已過期 '+(-d)+' 天':d+' 天'}</span>`}
+  if(['items','title','note','item'].includes(k))
+    return `<div class="wrap2">${esc(r[k]||'—')}</div>`+(k==='items'&&r.note?`<div class="meta">${esc(r.note)}</div>`:'')+(k==='items'&&r.invoice?`<div class="meta">發票 ${esc(r.invoice)}</div>`:'');
+  if(['amount','freight','bonus','premium','tax','base','rate','mileage','trips'].includes(k)){
+    let ex='';
+    if(k==='amount'&&view==='maint'&&(r.labor!=null||r.parts!=null))ex=`<div class="meta">工 ${money(r.labor)} ／ 料 ${money(r.parts)}</div>`;
+    if(k==='mileage'&&r.next)ex=`<div class="meta">下次 ${money(r.next)}</div>`;
+    return (r[k]==null?'—':money(r[k]))+ex}
+  if(k==='date')return esc(r.date||'—')+(r.done?`<div class="meta">完工 ${esc(r.done)}</div>`:'');
+  return esc(r[k]||'—')}
+function filtered(){
+  const m=M[view],dk=m.fields.find(f=>f.t==='date')?.k||'date';
+  return CACHE[view].filter(r=>{
+    for(const[k,v]of Object.entries(F)){
+      if(!v)continue;
+      if(k==='_from'){if((r[dk]||'')<v)return false;continue}
+      if(k==='_to'){if((r[dk]||'')>v)return false;continue}
+      if(k==='_q'){const s=Object.entries(r).filter(([kk])=>kk!=='scans').map(([,vv])=>vv).join(' ').toLowerCase();
+        if(!s.includes(v.toLowerCase()))return false;continue}
+      if((r[k]||'')!==v)return false}
+    return true}).sort((a,b)=>{
+    if(view==='insurance')return (a.end||'').localeCompare(b.end||'');
+    return (b[dk]||'').localeCompare(a[dk]||'')})}
+function listHTML(){
+  const m=M[view],rows=filtered(),all=CACHE[view];
+  const dk=m.fields.find(f=>f.t==='date')?.k;
+  let f=`<div class="filters">`;
+  m.fields.filter(x=>x.t==='select').forEach(x=>{
+    const o=[...new Set(all.map(r=>r[x.k]).filter(Boolean))].sort();
+    f+=`<div class="field"><label>${x.l}</label><select onchange="setF('${x.k}',this.value)">
+      <option value="">全部</option>${o.map(v=>`<option${F[x.k]===v?' selected':''}>${esc(v)}</option>`).join('')}</select></div>`});
+  m.fields.filter(x=>x.plate).forEach(x=>{
+    const o=[...new Set(all.map(r=>r[x.k]).filter(Boolean))].sort();
+    f+=`<div class="field"><label>車號</label><select onchange="setF('${x.k}',this.value)">
+      <option value="">全部</option>${o.map(v=>`<option${F[x.k]===v?' selected':''}>${esc(v)}</option>`).join('')}</select></div>`});
+  if(dk)f+=`<div class="field"><label>起</label><input type="date" value="${F._from||''}" onchange="setF('_from',this.value)"></div>
+    <div class="field"><label>迄</label><input type="date" value="${F._to||''}" onchange="setF('_to',this.value)"></div>`;
+  f+=`<div class="field"><label>搜尋</label><input type="text" value="${F._q||''}" oninput="setF('_q',this.value)" placeholder="關鍵字"></div>
+    <button class="btn btn-ghost btn-sm" onclick="F={};render()">清除</button>
+    <button class="btn btn-ghost btn-sm" onclick="exportCSV()">匯出 Excel</button></div>`;
+  let s='';
+  if(m.sum||m.unpaid){
+    const tot=k=>rows.reduce((a,r)=>a+(Number(r[k])||0),0);
+    s=`<div class="summary"><div><span>筆數</span><strong>${rows.length}</strong></div>`;
+    (m.sum||[]).forEach(k=>{s+=`<div><span>${COLMAP[k]||k}合計</span><strong>${money(tot(k))}</strong></div>`});
+    if(m.unpaid){const u=rows.filter(r=>r.paid==='未付'||r.paid==='未收').reduce((a,r)=>a+(Number(r[m.unpaid])||0),0);
+      s+=`<div class="alert"><span>${view==='billing'?'未收':'未付'}</span><strong>${money(u)}</strong></div>`}
+    s+=`</div>`}
+  if(!all.length)return f+`<div class="empty"><strong>還沒有紀錄</strong>左邊填一筆，存檔後就會出現在這裡。</div>`;
+  const NC=['amount','freight','bonus','premium','tax','mileage','trips','base','rate'];
+  return f+s+`<div class="tablewrap"><table><thead><tr>
+    ${m.cols.map(c=>`<th class="${NC.includes(c)?'num':''}">${COLMAP[c]||c}</th>`).join('')}<th></th></tr></thead>
+    <tbody>${rows.length?rows.map(r=>`<tr>
+      ${m.cols.map(c=>`<td class="${NC.includes(c)?'num':''}${c==='scans'?' scans':''}">${cellHTML(r,c)}</td>`).join('')}
+      <td style="white-space:nowrap"><button class="rowbtn" onclick="editRec('${r.id}')">修改</button>
+      <button class="rowbtn del" onclick="delRec('${r.id}')">刪除</button></td></tr>`).join('')
+      :`<tr><td colspan="${m.cols.length+1}" style="padding:30px;text-align:center;color:var(--muted)">這個條件沒有符合的紀錄</td></tr>`}
+    </tbody></table></div>`}
+function exportCSV(){
+  const m=M[view],rows=filtered();
+  if(!rows.length)return toast('目前沒有可以匯出的紀錄',1);
+  const fs=m.fields.filter(f=>f.t!=='images');
+  const q=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  const csv=[fs.map(f=>q(f.l)).join(',')].concat(rows.map(r=>fs.map(f=>q(r[f.k])).join(','))).join('\r\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`${m.name}_${today()}.csv`;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast(`已匯出 ${rows.length} 筆`)}
+
+/* ==================== 總覽 ==================== */
+function dashHTML(){
+  const ms=monthStart(),td=today(),inM=r=>r.date>=ms&&r.date<=td;
+  const sum=(a,k)=>a.reduce((x,r)=>x+(Number(r[k])||0),0);
+  const mF=sum(CACHE.trips.filter(inM),'freight'),mM=sum(CACHE.maint.filter(inM),'amount'),mP=sum(CACHE.petty.filter(inM),'amount');
+  const uM=sum(CACHE.maint.filter(r=>r.paid==='未付'),'amount');
+  const uR=sum(CACHE.billing.filter(r=>r.kind==='銷項'&&r.paid==='未收'),'amount');
+  const due=CACHE.insurance.map(r=>({...r,d:daysTo(r.end)})).filter(r=>r.d!==null&&r.d<=45).sort((a,b)=>a.d-b.d);
+  const empty=TABLES.every(t=>!CACHE[t].length);
+  return `<div class="head"><h1>總覽</h1><span class="sub">${td}</span><span class="spacer"></span>
+    <button class="btn btn-ghost btn-sm" onclick="refresh()">重新整理</button></div>
+  ${empty?`<div class="hint">資料庫是空的。建議先到「基本資料 → 車輛」把車號建起來，之後每張表單的車號就會自動跳出來選。</div>`:''}
+  <div class="cards">
+    <div class="card"><span>本月運費收入</span><strong>${money(mF)}</strong><em>${CACHE.trips.filter(inM).length} 趟</em></div>
+    <div class="card"><span>本月維修支出</span><strong>${money(mM)}</strong><em>${CACHE.maint.filter(inM).length} 張</em></div>
+    <div class="card"><span>本月零用金</span><strong>${money(mP)}</strong><em>${CACHE.petty.filter(inM).length} 筆</em></div>
+    <div class="card ${uM?'alert':''}"><span>維修未付</span><strong>${money(uM)}</strong><em>${CACHE.maint.filter(r=>r.paid==='未付').length} 張</em></div>
+    <div class="card ${uR?'alert':''}"><span>客戶未收帳款</span><strong>${money(uR)}</strong><em>${CACHE.billing.filter(r=>r.kind==='銷項'&&r.paid==='未收').length} 筆</em></div>
+  </div>
+  <h2>45 天內到期（保險／定檢／稅費）</h2>
+  ${due.length?`<div class="tablewrap"><table><thead><tr><th>車號</th><th>類型</th><th>公司／機關</th><th>到期日</th><th>剩餘</th><th class="num">保費</th><th>繳費</th></tr></thead><tbody>
+    ${due.map(r=>`<tr><td><span class="plate">${esc(r.plate)}</span></td><td><span class="tag">${esc(r.cat)}</span></td>
+    <td>${esc(r.company||'—')}</td><td>${esc(r.end)}</td>
+    <td><span class="tag ${r.d<0?'d':'w'}">${r.d<0?'已過期 '+(-r.d)+' 天':r.d+' 天'}</span></td>
+    <td class="num">${money(r.premium)}</td><td><span class="tag ${r.paid==='未付'?'w':'g'}">${esc(r.paid||'—')}</span></td></tr>`).join('')}
+    </tbody></table></div>`:`<div class="empty">45 天內沒有到期項目。<br><span style="font-size:13px">到「保險／到期」把強制險、第三人責任險、定檢、牌照稅建進去，這裡就會自動提醒。</span></div>`}
+  <footer>資料存在 Supabase 雲端資料庫，任何一台電腦開啟這個檔案、填好連線設定就看得到同一份資料。</footer>`}
+
+/* ==================== 薪資 ==================== */
+function payrollHTML(){
+  const ds=CACHE.drivers.filter(d=>d.status!=='離職');
+  const ts=CACHE.trips.filter(r=>(r.date||'').slice(0,7)===pMonth);
+  const rows=ds.map(d=>{const t=ts.filter(r=>r.driver===d.name);
+    const nT=t.reduce((a,r)=>a+(Number(r.trips)||0),0),fr=t.reduce((a,r)=>a+(Number(r.freight)||0),0);
+    const bo=t.reduce((a,r)=>a+(Number(r.bonus)||0),0),de=t.reduce((a,r)=>a+(Number(r.deduct)||0),0);
+    const bt=nT*(Number(d.rate)||0),bp=Math.round(fr*(Number(d.pct)||0)/100);
+    return{d,n:t.length,nT,fr,bt,bp,bo,de,total:(Number(d.base)||0)+bt+bp+bo-de}});
+  return `<div class="head"><h1>薪資計算</h1><span class="sub">依「出車報班」自動彙總</span><span class="spacer"></span>
+    <input type="month" value="${pMonth}" onchange="pMonth=this.value;render()" style="width:160px">
+    <button class="btn btn-ghost btn-sm" onclick="exportPayroll()">匯出 Excel</button></div>
+  ${ds.length?'':`<div class="hint">還沒有駕駛資料。先到「基本資料 → 駕駛」建立駕駛，並填底薪、每趟抽成或運費抽成％，這裡就會自動算。</div>`}
+  <div class="summary"><div><span>${pMonth} 應付薪資總額</span><strong>${money(rows.reduce((a,r)=>a+r.total,0))}</strong></div>
+    <div><span>人數</span><strong>${rows.length}</strong></div>
+    <div><span>總趟次</span><strong>${rows.reduce((a,r)=>a+r.nT,0)}</strong></div></div>
+  <div class="tablewrap"><table><thead><tr><th>駕駛</th><th class="num">趟次</th><th class="num">運費</th>
+    <th class="num">底薪</th><th class="num">趟次抽成</th><th class="num">運費抽成</th>
+    <th class="num">加班獎金</th><th class="num">扣款</th><th class="num">應付</th></tr></thead><tbody>
+    ${rows.map(r=>`<tr><td><strong>${esc(r.d.name)}</strong><div class="meta">${r.n} 筆報班</div></td>
+      <td class="num">${r.nT}</td><td class="num">${money(r.fr)}</td><td class="num">${money(r.d.base)}</td>
+      <td class="num">${money(r.bt)}</td><td class="num">${money(r.bp)}</td><td class="num">${money(r.bo)}</td>
+      <td class="num">${r.de?'-'+money(r.de):'—'}</td><td class="num"><strong>${money(r.total)}</strong></td></tr>`).join('')
+      ||`<tr><td colspan="9" style="padding:30px;text-align:center;color:var(--muted)">這個月沒有資料</td></tr>`}
+  </tbody></table></div>
+  <footer>公式：底薪 ＋ 趟次 × 每趟抽成 ＋ 運費 × 抽成％ ＋ 加班獎金 － 扣款。要改公式跟我說。</footer>`}
+function exportPayroll(){
+  const ds=CACHE.drivers.filter(d=>d.status!=='離職');
+  const ts=CACHE.trips.filter(r=>(r.date||'').slice(0,7)===pMonth);
+  const q=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  const L=[['月份','駕駛','趟次','運費','底薪','趟次抽成','運費抽成','加班獎金','扣款','應付'].map(q).join(',')];
+  ds.forEach(d=>{const t=ts.filter(r=>r.driver===d.name);
+    const nT=t.reduce((a,r)=>a+(Number(r.trips)||0),0),fr=t.reduce((a,r)=>a+(Number(r.freight)||0),0);
+    const bo=t.reduce((a,r)=>a+(Number(r.bonus)||0),0),de=t.reduce((a,r)=>a+(Number(r.deduct)||0),0);
+    const bt=nT*(Number(d.rate)||0),bp=Math.round(fr*(Number(d.pct)||0)/100);
+    L.push([pMonth,d.name,nT,fr,d.base||0,bt,bp,bo,de,(Number(d.base)||0)+bt+bp+bo-de].map(q).join(','))});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+L.join('\r\n')],{type:'text/csv;charset=utf-8'}));
+  a.download=`薪資_${pMonth}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+
+/* ==================== 連線設定 ==================== */
+function setupHTML(){
+  return `<div class="head"><h1>⚙️ 連線設定</h1></div><div class="setup">
+  ${online?`<div class="hint">目前已連線。資料表共 ${TABLES.length} 張，載入 ${TABLES.reduce((a,t)=>a+CACHE[t].length,0)} 筆資料。</div>`
+    :`<div class="hint bad">${loadErr?'連線失敗：'+esc(loadErr):'尚未設定連線。'}<br>填入下面兩個欄位後按儲存。</div>`}
+  <div class="field"><label>Project URL</label>
+    <input type="text" id="s_url" value="${esc(CFG.url)}" placeholder="https://xxxxx.supabase.co"></div>
+  <div class="field" style="margin-top:12px"><label>Publishable key（或 anon public key）</label>
+    <textarea id="s_key" style="min-height:80px;font-size:12.5px">${esc(CFG.key)}</textarea></div>
+  <div class="actions"><button class="btn btn-primary" onclick="saveCfg()">儲存並連線</button>
+    <button class="btn btn-ghost" onclick="if(confirm('清除這台電腦上的連線設定？')){CFG.clear();location.reload()}">清除設定</button></div>
+  <div class="toast" id="toast"></div>
+  <footer>設定只存在這台電腦的瀏覽器，不會上傳、不會進 git。<br>
+  換一台電腦要用，在那台上重新填一次同樣的 URL 和 key 就會看到同一份資料。<br>
+  金鑰不小心外流時，到 Supabase 後台重新產生一把，舊的就立刻失效。</footer></div>`}
+async function saveCfg(){
+  const u=$('#s_url').value.trim(),k=$('#s_key').value.trim();
+  if(!u||!k)return toast('兩個欄位都要填',1);
+  CFG.set(u,k);toast('連線測試中…');
+  await loadAll();
+  if(online){view='dash';render();}
+  else{render();toast('連線失敗：'+loadErr,1)}}
+async function refresh(){toast('載入中…');await loadAll();render()}
+
+/* ==================== 繪製 ==================== */
+function render(){
+  const m=M[view];
+  renderNav();
+  if(m.setup){$('#main').innerHTML=setupHTML();return}
+  if(!CFG.ok||!online){
+    $('#main').innerHTML=`<div class="head"><h1>連線設定</h1></div>
+      <div class="setup"><div class="hint bad">${loadErr?'連線失敗：'+esc(loadErr):'還沒設定資料庫連線。'}</div>
+      ${setupHTML().split('<div class="setup">')[1]}`;return}
+  if(m.dash){$('#main').innerHTML=dashHTML();return}
+  if(m.payroll){$('#main').innerHTML=payrollHTML();return}
+  const rec=editId?CACHE[view].find(r=>r.id===editId):null;
+  if(!editId)pending=[];
+  $('#main').innerHTML=`<div class="head"><h1>${m.icon} ${m.name}</h1>
+    <span class="sub">${CACHE[view].length} 筆</span><span class="spacer"></span>
+    <button class="btn btn-ghost btn-sm" onclick="refresh()">重新整理</button></div>
+    <div class="split"><section>${formHTML(rec)}</section>
+    <section><h2>紀錄</h2><div id="listArea">${listHTML()}</div></section></div>`;
+  drawThumbs()}
+
+(async()=>{
+  $('#main').innerHTML='<div style="padding:60px;text-align:center;color:var(--muted)"><span class="spin"></span>載入中…</div>';
+  if(CFG.ok)await loadAll();
+  if(!CFG.ok)view='setup';
+  render();
+})();
+</script>
+</body>
+</html>
