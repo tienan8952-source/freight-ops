@@ -686,5 +686,5 @@ function render(){
     <section><h2>紀錄</h2><div id="listArea">${listHTML()}</div></section></div>`;
   drawThumbs()
 }
-
-boot();
+/* boot() 是在所有功能模組 js 檔都載入完成後，由 index.html 最後一個 <script> 呼叫，
+   避免 onBootActive／navBadge／myTaskCard 等擴充點在還沒定義時就被呼叫到。 */
