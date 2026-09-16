@@ -18,13 +18,13 @@
 --brand:#2E8074;--brand-ink:#08110F;--danger:#E0736C;--ok:#4FBF95;--warn:#E8B51F;--warnbg:#2B2415;--dangerbg:#2E1917;}
 *{box-sizing:border-box}html,body{margin:0;padding:0;height:100%}
 body{background:var(--paper);color:var(--ink);font-family:"Noto Sans TC",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
-.app{display:grid;grid-template-columns:206px 1fr;min-height:100vh}
+.topbar{height:46px;box-sizing:border-box;display:flex;justify-content:flex-end;align-items:center;gap:12px;padding:0 26px;border-bottom:1px solid var(--rule);font-size:13.5px}
+.topbar .who{color:var(--muted)}
+.app{display:grid;grid-template-columns:206px 1fr;min-height:calc(100vh - 46px)}
 @media (max-width:860px){.app{grid-template-columns:1fr}}
 nav{background:var(--panel);border-right:1px solid var(--rule);padding:18px 0}
 @media (max-width:860px){nav{border-right:none;border-bottom:1px solid var(--rule);padding:12px 0}}
 nav .brand{padding:0 18px 14px;font-weight:700;font-size:16px;border-bottom:1px solid var(--rule);margin-bottom:10px}
-nav .brand small{display:block;font-weight:400;font-size:11.5px;color:var(--muted)}
-nav .brand .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle}
 nav .grp{padding:14px 18px 5px;font-size:11.5px;color:var(--muted)}
 nav a{display:block;padding:7px 18px;color:var(--ink);text-decoration:none;font-size:14.5px;cursor:pointer;border-left:3px solid transparent}
 nav a:hover{background:var(--field)}
@@ -101,44 +101,129 @@ dialog .dlgbar{display:flex;justify-content:flex-end;padding:8px}
 footer{margin-top:36px;padding-top:13px;border-top:1px solid var(--rule);color:var(--muted);font-size:12px}
 .hint{background:var(--field);border-left:3px solid var(--brand);padding:10px 13px;font-size:13.5px;margin-bottom:18px;border-radius:0 4px 4px 0}
 .hint.bad{border-left-color:var(--danger)}
-.setup{max-width:620px;margin:40px auto}
-.setup code{background:var(--field);padding:1px 5px;border-radius:3px;font-size:13px}
 .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--rule);border-top-color:var(--brand);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
 @keyframes sp{to{transform:rotate(360deg)}}
+.authwrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.authcard{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:28px 26px}
+.authcard h1{font-size:19px;margin:0 0 4px}
+.authcard .sub{color:var(--muted);font-size:13px;margin-bottom:18px}
+.authtabs{display:flex;gap:6px;margin-bottom:18px}
+.authtabs button{flex:1;padding:8px;border:1px solid var(--rule);background:var(--field);border-radius:4px;cursor:pointer;font-family:inherit;font-size:13.5px}
+.authtabs button.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.gatepage{max-width:480px;margin:60px auto;text-align:center}
+.gatepage .icon{font-size:40px;margin-bottom:10px}
+.permgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 14px;padding:12px 0}
+.permgrid label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink);margin:0}
+.permgrid input{width:auto}
 </style>
 </head>
 <body>
-<div class="app"><nav id="nav"></nav><main id="main"></main></div>
+<div id="app"></div>
 <dialog id="viewer"><div class="dlgbar"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('viewer').close()">關閉</button></div><img id="viewerImg" alt=""></dialog>
 
 <script>
-/* ==================== 連線設定 ==================== */
-const CFG={
-  get url(){return localStorage.getItem('fops.url')||''},
-  get key(){return localStorage.getItem('fops.key')||''},
-  set(u,k){localStorage.setItem('fops.url',u.replace(/\/+$/,''));localStorage.setItem('fops.key',k)},
-  clear(){localStorage.removeItem('fops.url');localStorage.removeItem('fops.key')},
-  get ok(){return !!(this.url&&this.key)}
+/* ==================== 連線設定（固定值） ==================== */
+const SUPABASE_URL='https://ekzqrpgrxicyvaqagdjp.supabase.co';
+const ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrenFycGdyeGljeXZhcWFnZGpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1Mjk0MzIsImV4cCI6MjEwNTEwNTQzMn0._q-9afZXr-mgAcOWFF2ePVK5tp4YGw9yabMMmv6mV_s';
+
+/* ==================== 登入狀態 ==================== */
+const AUTH={
+  get access(){return localStorage.getItem('fops.at')||''},
+  get refresh(){return localStorage.getItem('fops.rt')||''},
+  get expAt(){return Number(localStorage.getItem('fops.exp')||0)},
+  set(a,r,expSec){localStorage.setItem('fops.at',a);localStorage.setItem('fops.rt',r);
+    localStorage.setItem('fops.exp',String(Date.now()+(Number(expSec)||3600)*1000))},
+  clear(){['fops.at','fops.rt','fops.exp'].forEach(k=>localStorage.removeItem(k))}
 };
+let ME=null,PROFILES=[];
+
+async function authFetch(path,body){
+  const r=await fetch(`${SUPABASE_URL}/auth/v1${path}`,{method:'POST',
+    headers:{apikey:ANON_KEY,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(j.error_description||j.msg||j.error||'發生錯誤，請稍後再試');
+  return j;
+}
+async function refreshSession(){
+  if(!AUTH.refresh)throw new Error('no refresh token');
+  const j=await authFetch('/token?grant_type=refresh_token',{refresh_token:AUTH.refresh});
+  AUTH.set(j.access_token,j.refresh_token,j.expires_in);
+}
+async function ensureSession(){
+  if(!AUTH.access)return;
+  if(Date.now()>AUTH.expAt-60000){try{await refreshSession()}catch(e){AUTH.clear()}}
+}
+async function getMe(){
+  const r=await fetch(`${SUPABASE_URL}/auth/v1/user`,{headers:{apikey:ANON_KEY,Authorization:'Bearer '+AUTH.access}});
+  if(!r.ok)throw new Error('SESSION_INVALID');
+  return r.json();
+}
+async function onLogin(e){
+  e.preventDefault();if(busy)return;
+  const email=$('#li_email').value.trim(),pw=$('#li_pw').value;
+  busy=true;const b=$('#authBtn');if(b)b.disabled=true;toast('登入中…');
+  try{
+    const j=await authFetch('/token?grant_type=password',{email,password:pw});
+    AUTH.set(j.access_token,j.refresh_token,j.expires_in);
+    await boot();
+  }catch(err){toast(err.message,1)}
+  finally{busy=false;const bb=$('#authBtn');if(bb)bb.disabled=false}
+}
+async function onSignup(e){
+  e.preventDefault();if(busy)return;
+  const name=$('#su_name').value.trim(),email=$('#su_email').value.trim(),pw=$('#su_pw').value;
+  busy=true;const b=$('#authBtn');if(b)b.disabled=true;toast('註冊中…');
+  try{
+    const j=await authFetch('/signup',{email,password:pw,data:{name}});
+    if(j.access_token){AUTH.set(j.access_token,j.refresh_token,j.expires_in);await boot()}
+    else{authTab='login';render();toast('註冊成功，請完成信箱驗證後再登入')}
+  }catch(err){toast(err.message,1)}
+  finally{busy=false;const bb=$('#authBtn');if(bb)bb.disabled=false}
+}
+function doLogout(){
+  const tok=AUTH.access;AUTH.clear();ME=null;PROFILES=[];view='dash';authTab='login';render();
+  if(tok)fetch(`${SUPABASE_URL}/auth/v1/logout`,{method:'POST',headers:{apikey:ANON_KEY,Authorization:'Bearer '+tok}}).catch(()=>{});
+}
+async function boot(){
+  if(!AUTH.access){ME=null;render();return}
+  $('#app').innerHTML='<div style="padding:60px;text-align:center;color:var(--muted)"><span class="spin"></span>載入中…</div>';
+  try{
+    await ensureSession();
+    if(!AUTH.access)throw new Error('SESSION_INVALID');
+    const u=await getMe();
+    const rows=await api('profiles','GET',{query:`?id=eq.${u.id}&select=*`});
+    const prof=rows&&rows[0];
+    if(!prof)throw new Error('找不到帳號資料');
+    ME={id:u.id,email:u.email,name:prof.name||u.email,role:prof.role,status:prof.status,perms:prof.perms||{}};
+    if(ME.status==='active'){await loadAll();if(ME.role==='admin')await loadProfiles()}
+  }catch(e){AUTH.clear();ME=null}
+  render();
+}
+
+/* ==================== 資料表存取（帶使用者 access token，讓 RLS 生效） ==================== */
 const TABLES=['vehicles','drivers','customers','trips','maint','petty','billing','insurance','docs'];
-let CACHE={},online=false,loadErr='';
+let CACHE={};
 TABLES.forEach(t=>CACHE[t]=[]);
 
 async function api(table,method,opt={}){
-  const h={apikey:CFG.key,Authorization:'Bearer '+CFG.key,'Content-Type':'application/json'};
+  await ensureSession();
+  const h={apikey:ANON_KEY,Authorization:'Bearer '+(AUTH.access||ANON_KEY),'Content-Type':'application/json'};
   if(method!=='GET')h.Prefer='return=representation';
   const q=opt.query||(method==='GET'?'?select=*':'');
-  const r=await fetch(`${CFG.url}/rest/v1/${table}${q}`,{method,headers:h,body:opt.body?JSON.stringify(opt.body):undefined});
+  const doFetch=()=>fetch(`${SUPABASE_URL}/rest/v1/${table}${q}`,{method,headers:h,body:opt.body?JSON.stringify(opt.body):undefined});
+  let r=await doFetch();
+  if(r.status===401){
+    try{await refreshSession();h.Authorization='Bearer '+AUTH.access;r=await doFetch()}catch(_){}
+  }
   if(!r.ok)throw new Error(`${r.status} ${(await r.text()).slice(0,200)}`);
   return r.status===204?null:r.json();
 }
 async function loadAll(){
-  loadErr='';
-  try{
-    const res=await Promise.all(TABLES.map(t=>api(t,'GET')));
-    TABLES.forEach((t,i)=>CACHE[t]=res[i]||[]);
-    online=true;
-  }catch(e){online=false;loadErr=e.message}
+  try{const res=await Promise.all(TABLES.map(t=>api(t,'GET')));TABLES.forEach((t,i)=>CACHE[t]=res[i]||[])}
+  catch(e){/* 個別模組畫面會在操作時顯示錯誤 */}
+}
+async function loadProfiles(){
+  try{PROFILES=await api('profiles','GET',{query:'?select=*&order=created_at.asc'})}catch(e){PROFILES=[]}
 }
 
 /* ==================== 工具 ==================== */
@@ -259,7 +344,7 @@ const M={
       {k:'kind',t:'select',opts:['客戶','廠商','兩者'],l:'屬性',c:6},
       {k:'note',t:'textarea',l:'備註',c:12}],
     cols:['name','tax','contact','phone','kind']},
-  setup:{name:'連線設定',icon:'⚙️',setup:1}
+  admin:{name:'帳號管理',icon:'👤',admin:1}
 };
 const COLMAP={date:'日期',plate:'車號',driver:'駕駛',customer:'客戶',route:'路線',trips:'趟次',
 freight:'運費',bonus:'加班',cat:'類別',vendor:'廠商',items:'項目',amount:'金額',mileage:'里程',
@@ -268,25 +353,44 @@ company:'公司／機關',start:'生效',end:'到期',due:'剩餘',premium:'保�
 docno:'文號',vtype:'車種',status:'狀態',note:'備註',name:'姓名',phone:'電話',base:'底薪',
 rate:'每趟',pct:'抽成％',contact:'聯絡人',done:'完工'};
 
-let view='dash',pending=[],editId='',autoTouched={},busy=false,F={},pMonth=today().slice(0,7);
+const PERM_OF={trips:'trips',maint:'maint',petty:'petty',billing:'billing',insurance:'insurance',
+  docs:'docs',payroll:'payroll',vehicles:'masters',drivers:'masters',customers:'masters'};
+const MODLIST=[
+  {key:'trips',label:'出車報班'},{key:'maint',label:'車輛維修'},{key:'petty',label:'零用金'},
+  {key:'billing',label:'客戶對帳'},{key:'insurance',label:'保險到期'},{key:'docs',label:'公文建檔'},
+  {key:'payroll',label:'薪資計算'},{key:'masters',label:'基本資料'},{key:'admin',label:'帳號管理'}
+];
+function canSee(key){
+  if(key==='admin')return !!(ME&&ME.role==='admin');
+  if(!ME)return false;
+  if(ME.role==='admin')return true;
+  const perm=PERM_OF[key]||key;
+  return !!(ME.perms&&ME.perms[perm]===true);
+}
+
+let view='dash',pending=[],editId='',autoTouched={},busy=false,F={},pMonth=today().slice(0,7),authTab='login',expandedUser='';
 
 /* ==================== 導覽 ==================== */
 function renderNav(){
   const dueN=CACHE.insurance.filter(r=>{const d=daysTo(r.end);return d!==null&&d<=30}).length;
-  const grp=(t,keys)=>`<div class="grp">${t}</div>`+keys.map(k=>{
-    const b=k==='insurance'&&dueN?`<span class="badge">${dueN}</span>`:'';
-    return `<a class="${view===k?'on':''}" onclick="go('${k}')">${M[k].icon} ${M[k].name}${b}</a>`}).join('');
-  const dot=online?'var(--ok)':'var(--danger)';
-  $('#nav').innerHTML=`<div class="brand">貨運行營運系統
-    <small><span class="dot" style="background:${dot}"></span>${online?'已連線 Supabase':'未連線'}</small></div>`
-    +`<a class="${view==='dash'?'on':''}" onclick="go('dash')">📊 總覽</a>`
+  const pendN=PROFILES.filter(p=>p.status==='pending').length;
+  const grp=(t,keys)=>{
+    const vis=keys.filter(canSee);
+    if(!vis.length)return '';
+    return `<div class="grp">${t}</div>`+vis.map(k=>{
+      let b='';
+      if(k==='insurance'&&dueN)b=`<span class="badge">${dueN}</span>`;
+      if(k==='admin'&&pendN)b=`<span class="badge">${pendN}</span>`;
+      return `<a class="${view===k?'on':''}" onclick="go('${k}')">${M[k].icon} ${M[k].name}${b}</a>`}).join('')};
+  $('#nav').innerHTML=`<div class="brand">貨運行營運系統</div>`
+    +(canSee('dash')?`<a class="${view==='dash'?'on':''}" onclick="go('dash')">📊 總覽</a>`:'')
     +grp('日常作業',['trips','maint','petty','billing'])
     +grp('建檔管理',['insurance','docs'])
     +grp('報表',['payroll'])
     +grp('基本資料',['vehicles','drivers','customers'])
-    +grp('系統',['setup']);
+    +grp('系統',['admin']);
 }
-function go(k){view=k;pending=[];editId='';autoTouched={};F={};render();window.scrollTo(0,0)}
+function go(k){if(!canSee(k)&&k!=='dash')return;view=k;pending=[];editId='';autoTouched={};F={};expandedUser='';render();window.scrollTo(0,0)}
 
 /* ==================== 影像 ==================== */
 function shrink(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;
@@ -448,7 +552,7 @@ function exportCSV(){
   const q=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
   const csv=[fs.map(f=>q(f.l)).join(',')].concat(rows.map(r=>fs.map(f=>q(r[f.k])).join(','))).join('\r\n');
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));
   a.download=`${m.name}_${today()}.csv`;a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast(`已匯出 ${rows.length} 筆`)}
 
@@ -463,7 +567,7 @@ function dashHTML(){
   const empty=TABLES.every(t=>!CACHE[t].length);
   return `<div class="head"><h1>總覽</h1><span class="sub">${td}</span><span class="spacer"></span>
     <button class="btn btn-ghost btn-sm" onclick="refresh()">重新整理</button></div>
-  ${empty?`<div class="hint">資料庫是空的。建議先到「基本資料 → 車輛」把車號建起來，之後每張表單的車號就會自動跳出來選。</div>`:''}
+  ${empty?`<div class="hint">目前沒有可看的資料。如果剛拿到帳號，建議先確認自己的權限，或到「基本資料 → 車輛」把車號建起來。</div>`:''}
   <div class="cards">
     <div class="card"><span>本月運費收入</span><strong>${money(mF)}</strong><em>${CACHE.trips.filter(inM).length} 趟</em></div>
     <div class="card"><span>本月維修支出</span><strong>${money(mM)}</strong><em>${CACHE.maint.filter(inM).length} 張</em></div>
@@ -478,7 +582,7 @@ function dashHTML(){
     <td><span class="tag ${r.d<0?'d':'w'}">${r.d<0?'已過期 '+(-r.d)+' 天':r.d+' 天'}</span></td>
     <td class="num">${money(r.premium)}</td><td><span class="tag ${r.paid==='未付'?'w':'g'}">${esc(r.paid||'—')}</span></td></tr>`).join('')}
     </tbody></table></div>`:`<div class="empty">45 天內沒有到期項目。<br><span style="font-size:13px">到「保險／到期」把強制險、第三人責任險、定檢、牌照稅建進去，這裡就會自動提醒。</span></div>`}
-  <footer>資料存在 Supabase 雲端資料庫，任何一台電腦開啟這個檔案、填好連線設定就看得到同一份資料。</footer>`}
+  <footer>資料存在 Supabase 雲端資料庫，登入同一組帳號就能看到同一份資料（依權限顯示）。</footer>`}
 
 /* ==================== 薪資 ==================== */
 function payrollHTML(){
@@ -517,42 +621,103 @@ function exportPayroll(){
     const bt=nT*(Number(d.rate)||0),bp=Math.round(fr*(Number(d.pct)||0)/100);
     L.push([pMonth,d.name,nT,fr,d.base||0,bt,bp,bo,de,(Number(d.base)||0)+bt+bp+bo-de].map(q).join(','))});
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob(['\uFEFF'+L.join('\r\n')],{type:'text/csv;charset=utf-8'}));
+  a.href=URL.createObjectURL(new Blob(['﻿'+L.join('\r\n')],{type:'text/csv;charset=utf-8'}));
   a.download=`薪資_${pMonth}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 
-/* ==================== 連線設定 ==================== */
-function setupHTML(){
-  return `<div class="head"><h1>⚙️ 連線設定</h1></div><div class="setup">
-  ${online?`<div class="hint">目前已連線。資料表共 ${TABLES.length} 張，載入 ${TABLES.reduce((a,t)=>a+CACHE[t].length,0)} 筆資料。</div>`
-    :`<div class="hint bad">${loadErr?'連線失敗：'+esc(loadErr):'尚未設定連線。'}<br>填入下面兩個欄位後按儲存。</div>`}
-  <div class="field"><label>Project URL</label>
-    <input type="text" id="s_url" value="${esc(CFG.url)}" placeholder="https://xxxxx.supabase.co"></div>
-  <div class="field" style="margin-top:12px"><label>Publishable key（或 anon public key）</label>
-    <textarea id="s_key" style="min-height:80px;font-size:12.5px">${esc(CFG.key)}</textarea></div>
-  <div class="actions"><button class="btn btn-primary" onclick="saveCfg()">儲存並連線</button>
-    <button class="btn btn-ghost" onclick="if(confirm('清除這台電腦上的連線設定？')){CFG.clear();location.reload()}">清除設定</button></div>
-  <div class="toast" id="toast"></div>
-  <footer>設定只存在這台電腦的瀏覽器，不會上傳、不會進 git。<br>
-  換一台電腦要用，在那台上重新填一次同樣的 URL 和 key 就會看到同一份資料。<br>
-  金鑰不小心外流時，到 Supabase 後台重新產生一把，舊的就立刻失效。</footer></div>`}
-async function saveCfg(){
-  const u=$('#s_url').value.trim(),k=$('#s_key').value.trim();
-  if(!u||!k)return toast('兩個欄位都要填',1);
-  CFG.set(u,k);toast('連線測試中…');
-  await loadAll();
-  if(online){view='dash';render();}
-  else{render();toast('連線失敗：'+loadErr,1)}}
+/* ==================== 帳號管理（admin 專用） ==================== */
+async function refreshProfiles(){await loadProfiles();render()}
+function adminRowHTML(p){
+  const isMe=p.id===ME.id;
+  const statusTag=p.status==='pending'?'<span class="tag w">待審核</span>':p.status==='suspended'?'<span class="tag d">已停權</span>':'<span class="tag g">已啟用</span>';
+  let rows=`<tr><td><strong>${esc(p.name||'—')}</strong>${isMe?'<div class="meta">（我）</div>':''}</td>
+    <td>${esc(p.email||'—')}</td>
+    <td><select onchange="setRole('${p.id}',this.value)"${isMe?' disabled':''}>
+      <option value="user"${p.role==='user'?' selected':''}>user</option>
+      <option value="admin"${p.role==='admin'?' selected':''}>admin</option></select></td>
+    <td><select onchange="setStatus('${p.id}',this.value)"${isMe?' disabled':''}>
+      <option value="pending"${p.status==='pending'?' selected':''}>待審核</option>
+      <option value="active"${p.status==='active'?' selected':''}>啟用</option>
+      <option value="suspended"${p.status==='suspended'?' selected':''}>停權</option></select> ${statusTag}</td>
+    <td>${esc((p.created_at||'').slice(0,16).replace('T',' '))}</td>
+    <td><button class="rowbtn" onclick="toggleExpand('${p.id}')">${expandedUser===p.id?'收合':'權限'}</button></td></tr>`;
+  if(expandedUser===p.id){
+    rows+=`<tr><td colspan="6"><div class="permgrid">${MODLIST.map(mk=>`
+      <label><input type="checkbox" ${p.perms&&p.perms[mk.key]?'checked':''} onchange="setPerm('${p.id}','${mk.key}',this.checked)">${mk.label}</label>`).join('')}</div></td></tr>`;
+  }
+  return rows;
+}
+function adminHTML(){
+  const rows=PROFILES.slice().sort((a,b)=>(a.created_at||'').localeCompare(b.created_at||''));
+  const pendN=rows.filter(p=>p.status==='pending').length;
+  return `<div class="head"><h1>👤 帳號管理</h1><span class="sub">${rows.length} 個帳號${pendN?`，${pendN} 個待審核`:''}</span>
+    <span class="spacer"></span><button class="btn btn-ghost btn-sm" onclick="refreshProfiles()">重新整理</button></div>
+    ${pendN?`<div class="hint">有 ${pendN} 個帳號正在等待審核，請將狀態切換為「啟用」並勾選需要的權限。</div>`:''}
+    <div class="tablewrap"><table><thead><tr><th>姓名</th><th>Email</th><th>角色</th><th>狀態</th><th>註冊時間</th><th></th></tr></thead>
+    <tbody>${rows.length?rows.map(adminRowHTML).join(''):'<tr><td colspan="6" style="padding:30px;text-align:center;color:var(--muted)">還沒有任何帳號</td></tr>'}</tbody></table></div>
+    <div class="toast" id="toast"></div>`;
+}
+function toggleExpand(id){expandedUser=expandedUser===id?'':id;render()}
+async function setRole(id,role){
+  try{await api('profiles','PATCH',{body:{role},query:`?id=eq.${id}`});await refreshProfiles();toast('已更新')}
+  catch(e){toast('更新失敗：'+e.message,1)}
+}
+async function setStatus(id,status){
+  try{await api('profiles','PATCH',{body:{status},query:`?id=eq.${id}`});await refreshProfiles();toast('已更新')}
+  catch(e){toast('更新失敗：'+e.message,1)}
+}
+async function setPerm(id,key,val){
+  const p=PROFILES.find(x=>x.id===id);if(!p)return;
+  const perms={...(p.perms||{}),[key]:val};
+  try{await api('profiles','PATCH',{body:{perms},query:`?id=eq.${id}`});await refreshProfiles();toast('已更新')}
+  catch(e){toast('更新失敗：'+e.message,1)}
+}
+
 async function refresh(){toast('載入中…');await loadAll();render()}
 
 /* ==================== 繪製 ==================== */
+function authFormHTML(){
+  if(authTab==='signup'){
+    return `<form onsubmit="onSignup(event)">
+      <div class="field"><label>姓名 <span class="req">*</span></label><input type="text" id="su_name" required></div>
+      <div class="field"><label>Email <span class="req">*</span></label><input type="email" id="su_email" required></div>
+      <div class="field"><label>密碼 <span class="req">*</span></label><input type="password" id="su_pw" required minlength="6"></div>
+      <div class="actions"><button type="submit" class="btn btn-primary" id="authBtn" style="width:100%">註冊</button></div>
+    </form>`;
+  }
+  return `<form onsubmit="onLogin(event)">
+    <div class="field"><label>Email <span class="req">*</span></label><input type="email" id="li_email" required></div>
+    <div class="field"><label>密碼 <span class="req">*</span></label><input type="password" id="li_pw" required></div>
+    <div class="actions"><button type="submit" class="btn btn-primary" id="authBtn" style="width:100%">登入</button></div>
+  </form>`;
+}
+function shellWithTopbar(inner){
+  return `<div class="topbar"><span class="who">${ME?esc(ME.name):''}${ME&&ME.role==='admin'?' <span class="tag">管理員</span>':''}</span>
+    <button class="btn btn-ghost btn-sm" onclick="doLogout()">登出</button></div>${inner}`;
+}
+function gateShellHTML(title,msg){
+  return shellWithTopbar(`<div class="gatepage"><div class="icon">${title==='帳號已停權'?'⛔':'⏳'}</div><h1>${esc(title)}</h1><p style="color:var(--muted)">${esc(msg)}</p></div>`);
+}
 function render(){
-  const m=M[view];
+  if(!AUTH.access){
+    $('#app').innerHTML=`<div class="authwrap"><div class="authcard">
+      <h1>貨運行營運系統</h1><div class="sub">登入後依帳號權限使用系統</div>
+      <div class="authtabs">
+        <button class="${authTab==='login'?'on':''}" onclick="authTab='login';render()">登入</button>
+        <button class="${authTab==='signup'?'on':''}" onclick="authTab='signup';render()">註冊</button>
+      </div>
+      ${authFormHTML()}
+      <div class="toast" id="toast"></div>
+    </div></div>`;
+    return;
+  }
+  if(!ME){$('#app').innerHTML='<div style="padding:60px;text-align:center;color:var(--muted)"><span class="spin"></span>載入中…</div>';return}
+  if(ME.status==='pending'){$('#app').innerHTML=gateShellHTML('帳號等待管理員核准','您的註冊已送出，請等待管理員啟用帳號並設定權限後即可使用系統。');return}
+  if(ME.status==='suspended'){$('#app').innerHTML=gateShellHTML('帳號已停權','此帳號已被管理員停權，如有疑問請聯繫系統管理員。');return}
+
+  $('#app').innerHTML=shellWithTopbar('<div class="app"><nav id="nav"></nav><main id="main"></main></div>');
   renderNav();
-  if(m.setup){$('#main').innerHTML=setupHTML();return}
-  if(!CFG.ok||!online){
-    $('#main').innerHTML=`<div class="head"><h1>連線設定</h1></div>
-      <div class="setup"><div class="hint bad">${loadErr?'連線失敗：'+esc(loadErr):'還沒設定資料庫連線。'}</div>
-      ${setupHTML().split('<div class="setup">')[1]}`;return}
+  const m=M[view];
+  if(m.admin){$('#main').innerHTML=adminHTML();return}
   if(m.dash){$('#main').innerHTML=dashHTML();return}
   if(m.payroll){$('#main').innerHTML=payrollHTML();return}
   const rec=editId?CACHE[view].find(r=>r.id===editId):null;
@@ -562,14 +727,10 @@ function render(){
     <button class="btn btn-ghost btn-sm" onclick="refresh()">重新整理</button></div>
     <div class="split"><section>${formHTML(rec)}</section>
     <section><h2>紀錄</h2><div id="listArea">${listHTML()}</div></section></div>`;
-  drawThumbs()}
+  drawThumbs()
+}
 
-(async()=>{
-  $('#main').innerHTML='<div style="padding:60px;text-align:center;color:var(--muted)"><span class="spin"></span>載入中…</div>';
-  if(CFG.ok)await loadAll();
-  if(!CFG.ok)view='setup';
-  render();
-})();
+boot();
 </script>
 </body>
 </html>
