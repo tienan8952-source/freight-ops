@@ -189,7 +189,7 @@ const M={
       {k:'note',t:'textarea',l:'備註',c:12},
       {k:'scans',t:'images',l:'收據照片',c:12}],
     cols:['date','cat','item','payer','plate','amount','scans']},
-  billing:{name:'客戶對帳',icon:'💰',sum:['amount','tax'],unpaid:'amount',
+  billing:{name:'客戶對帳',icon:'💰',sum:['amount','tax'],unpaid:'amount',dense:1,
     fields:[{k:'date',t:'date',l:'日期',req:1,def:'today',c:6},
       {k:'kind',t:'select',opts:['銷項','進項'],l:'類型',req:1,c:6},
       {k:'customer',t:'ref',ref:'customers',rk:'name',l:'客戶／廠商',req:1,c:12},
@@ -252,6 +252,8 @@ const M={
     cols:['name','tax','contact','phone','kind']},
   admin:{name:'帳號管理',icon:'👤',render:()=>adminHTML()}
 };
+const ICON_COLOR={trips:'pri',maint:'amb',petty:'cy',billing:'pri',insurance:'grn',docs:'pur',
+  vehicles:'cy',drivers:'pur',customers:'grn'};
 const COLMAP={date:'日期',plate:'車號',driver:'駕駛',customer:'客戶',route:'路線',trips:'趟次',
 freight:'運費',bonus:'加班',cat:'類別',vendor:'廠商',items:'項目',amount:'金額',mileage:'里程',
 paid:'狀態',scans:'檔案',item:'品名',payer:'付款人',kind:'類型',invoice:'發票',tax:'稅額',
@@ -301,12 +303,37 @@ function renderNav(){
     if(!vis.length)return '';
     return `<div class="grp">${t}</div>`+vis.map(k=>
       `<a class="${view===k?'on':''}" onclick="go('${k}')">${M[k].icon} ${M[k].name}${badgeFor(k)}</a>`).join('')};
-  let html=`<div class="brand">貨運行營運系統</div>`
+  let html=`<div class="side-logo"><div class="box">🚛</div><div class="txt">
+      <div class="name">貨運行營運系統</div><div class="sub">Freight Ops</div></div></div>`
     +(canSee('dash')?`<a class="${view==='dash'?'on':''}" onclick="go('dash')">📊 總覽</a>`:'');
   NAV_GROUPS.forEach(g=>{html+=grp(g.label,g.keys)});
   html+=grp(SYSTEM_GROUP.label,SYSTEM_GROUP.keys);
   if(canSee('help'))html+=`<a class="${view==='help'?'on':''}" onclick="go('help')">❓ 使用說明</a>`;
+  const quickKeys=['trips','maint','petty','billing'].filter(canSee);
+  if(quickKeys.length)html+=`<div class="quick-entry"><div class="lbl">快速入口</div><div class="grid2">
+    ${quickKeys.map(k=>`<a onclick="go('${k}')"><span>${M[k].icon}</span>${M[k].name}</a>`).join('')}
+  </div></div>`;
   $('#nav').innerHTML=html;
+}
+function initials(name){const s=(name||'').trim();return s?s.slice(0,1).toUpperCase():'?'}
+function openQuickAddMenu(){
+  let dlg=document.getElementById('quickAddDlg');
+  if(!dlg){dlg=document.createElement('dialog');dlg.id='quickAddDlg';dlg.style.maxWidth='360px';dlg.style.width='92vw';document.body.appendChild(dlg)}
+  dlg.innerHTML=`<div class="dlgbar"><strong style="margin-right:auto">快速新增</strong>
+    <button class="btn btn-ghost btn-sm" onclick="document.getElementById('quickAddDlg').close()">關閉</button></div>
+    <div style="padding:0 16px 16px"><div class="btns" style="display:flex;flex-wrap:wrap;gap:8px">
+    ${QUICK_ADD_BTNS.map(b=>`<a onclick="document.getElementById('quickAddDlg').close();go('${b.k}')" style="background:#fff;border:1px solid var(--line);border-radius:var(--r-pill);padding:7px 16px;font-size:13px;color:var(--ink);cursor:pointer;text-decoration:none">${b.l}</a>`).join('')}
+    </div></div>`;
+  dlg.showModal();
+}
+function mobileNavHTML(){
+  const settingsKey=canSee('admin')?'admin':'help';
+  const items=[{k:'dash',ic:'🏠',l:'首頁'},{k:'trips',ic:'📄',l:'單據'},null,{k:'payroll',ic:'📊',l:'報表'},{k:settingsKey,ic:'⚙️',l:'設定'}];
+  return `<div class="mobnav">${items.map(it=>{
+    if(!it)return `<div class="fab-slot"><div class="fab" onclick="openQuickAddMenu()">＋</div></div>`;
+    if(!canSee(it.k))return `<div></div>`;
+    return `<a class="${view===it.k?'on':''}" onclick="go('${it.k}')"><span class="ic">${it.ic}</span>${it.l}</a>`;
+  }).join('')}</div>`;
 }
 function go(k){if(!canSee(k)&&k!=='dash')return;view=k;pending=[];editId='';autoTouched={};F={};expandedUser='';render();window.scrollTo(0,0)}
 
@@ -471,15 +498,47 @@ function listHTML(){
     s+=`</div>`}
   if(!all.length)return f+`<div class="empty"><strong>還沒有紀錄</strong>左邊填一筆，存檔後就會出現在這裡。</div>`;
   const NC=['amount','freight','bonus','premium','tax','mileage','trips','base','rate'];
-  return f+s+`<div class="tablewrap"><table><thead><tr>
-    ${m.cols.map(c=>`<th class="${NC.includes(c)?'num':''}">${COLMAP[c]||c}</th>`).join('')}<th></th></tr></thead>
-    <tbody>${rows.length?rows.map(r=>`<tr>
-      ${m.cols.map(c=>`<td class="${NC.includes(c)?'num':''}${c==='scans'?' scans':''}">${cellHTML(r,c)}</td>`).join('')}
-      <td style="white-space:nowrap"><button class="rowbtn" onclick="editRec('${r.id}')">修改</button>
+  if(m.dense){
+    return f+s+`<div class="tablewrap"><table><thead><tr>
+      ${m.cols.map(c=>`<th class="${NC.includes(c)?'num':''}">${COLMAP[c]||c}</th>`).join('')}<th></th></tr></thead>
+      <tbody>${rows.length?rows.map(r=>`<tr>
+        ${m.cols.map(c=>`<td class="${NC.includes(c)?'num':''}${c==='scans'?' scans':''}">${cellHTML(r,c)}</td>`).join('')}
+        <td style="white-space:nowrap"><button class="rowbtn" onclick="editRec('${r.id}')">修改</button>
+        ${(typeof taskSendButton==='function')?taskSendButton(view,r):''}
+        <button class="rowbtn del" onclick="delRec('${r.id}')">刪除</button></td></tr>`).join('')
+        :`<tr><td colspan="${m.cols.length+1}" style="padding:30px;text-align:center;color:var(--muted)">這個條件沒有符合的紀錄</td></tr>`}
+      </tbody></table></div>`;
+  }
+  if(!rows.length)return f+s+`<div class="panel"><div class="empty">這個條件沒有符合的紀錄</div></div>`;
+  return f+s+`<div class="panel"><div class="listwrap">${rows.map(r=>rowCardHTML(r,NC)).join('')}</div></div>`}
+function rowCardHTML(r,NC){
+  const m=M[view];
+  const TAGCOLS=['cat','kind','paid'];
+  const cols=m.cols;
+  const titleCol=cols[0];
+  const tagCols=cols.filter(c=>TAGCOLS.includes(c));
+  const valCol=(m.sum&&m.sum[0]&&cols.includes(m.sum[0]))?m.sum[0]:cols.find(c=>NC.includes(c)&&!tagCols.includes(c));
+  const metaCols=cols.filter(c=>c!==titleCol&&c!=='scans'&&!tagCols.includes(c)&&c!==valCol);
+  const metaHTML=metaCols.map(c=>{
+    const val=cellHTML(r,c);
+    if(val==null||val==='—')return '';
+    return `<span>${COLMAP[c]||c}：${val}</span>`;
+  }).filter(Boolean).join('');
+  const tagsHTML=tagCols.map(c=>cellHTML(r,c)).join(' ');
+  const valueHTML=valCol?cellHTML(r,valCol):'';
+  const scansHTML=cols.includes('scans')?`<div class="lr-scans">${cellHTML(r,'scans')}</div>`:'';
+  return `<div class="listrow">
+    <div class="lr-icon ${ICON_COLOR[view]||'pri'}">${m.icon||'📄'}</div>
+    <div class="lr-main">
+      <div class="lr-title">${cellHTML(r,titleCol)}</div>
+      ${metaHTML?`<div class="lr-meta">${metaHTML}</div>`:''}
+      ${tagsHTML?`<div class="lr-tags">${tagsHTML}</div>`:''}
+    </div>
+    <div class="lr-value">${valueHTML}${scansHTML}</div>
+    <div class="lr-actions"><button class="rowbtn" onclick="editRec('${r.id}')">修改</button>
       ${(typeof taskSendButton==='function')?taskSendButton(view,r):''}
-      <button class="rowbtn del" onclick="delRec('${r.id}')">刪除</button></td></tr>`).join('')
-      :`<tr><td colspan="${m.cols.length+1}" style="padding:30px;text-align:center;color:var(--muted)">這個條件沒有符合的紀錄</td></tr>`}
-    </tbody></table></div>`}
+      <button class="rowbtn del" onclick="delRec('${r.id}')">刪除</button></div>
+  </div>`}
 function exportCSV(){
   const m=M[view],rows=filtered();
   if(!rows.length)return toast('目前沒有可以匯出的紀錄',1);
@@ -492,6 +551,34 @@ function exportCSV(){
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast(`已匯出 ${rows.length} 筆`)}
 
 /* ==================== 總覽 ==================== */
+const QUICK_ADD_BTNS=[{k:'maint',l:'維修單'},{k:'petty',l:'加油'},{k:'trips',l:'出車報班'},
+  {k:'petty',l:'零用金'},{k:'billing',l:'發票'},{k:'docs',l:'更多'}];
+function trendHTML(cur,prv){
+  const diff=cur-prv,pct=prv?Math.round(diff/prv*100):(cur?100:0);
+  const cls=diff>0?'up':diff<0?'down':'flat';
+  const arrow=diff>0?'▲':diff<0?'▼':'—';
+  return `<span class="trend ${cls}">${arrow} ${money(Math.abs(diff))}${prv?`（${diff>=0?'+':''}${pct}%）`:''}</span>`;
+}
+function kpiCardHTML(icon,label,value,count,trend,alert){
+  return `<div class="card ${alert?'alert':''}"><div class="kpi-ic">${icon}</div>
+    <div class="kpi-body"><span>${label}</span><strong>${money(value)}</strong>
+    <em>${count}${trend?`　${trend}`:''}</em></div></div>`;
+}
+function donutSVG(parts){
+  const total=parts.reduce((a,p)=>a+p.v,0);
+  if(!total)return '<div class="empty" style="padding:20px 0">目前沒有資料</div>';
+  const R=42,C=2*Math.PI*R;
+  let off=0;
+  const circles=parts.map(p=>{
+    const len=C*(p.v/total);
+    const c=`<circle cx="60" cy="60" r="${R}" fill="none" stroke="${p.color}" stroke-width="16"
+      stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 60 60)"></circle>`;
+    off+=len;return c;
+  }).join('');
+  return `<svg width="120" height="120" viewBox="0 0 120 120">${circles}
+    <text x="60" y="56" text-anchor="middle" font-size="18" font-weight="700" font-family="Roboto Mono,monospace" fill="var(--ink)">${total}</text>
+    <text x="60" y="72" text-anchor="middle" font-size="10" fill="var(--mut)">張</text></svg>`;
+}
 function dashHTML(){
   const ms=monthStart(),td=today(),inM=r=>r.date>=ms&&r.date<=td;
   const sum=(a,k)=>a.reduce((x,r)=>x+(Number(r[k])||0),0);
@@ -503,34 +590,70 @@ function dashHTML(){
 
   const prev=monthRange(-1);
   const inPrev=r=>r.date>=prev.start&&r.date<=prev.end;
-  const pF=sum(CACHE.trips.filter(inPrev),'freight'),pM2=sum(CACHE.maint.filter(inPrev),'amount'),pP=sum(CACHE.petty.filter(inPrev),'amount');
-  const cmp=(cur,prv)=>{const diff=cur-prv,pct=prv?Math.round(diff/prv*100):(cur?100:0);
-    return `<span style="color:${diff>0?'var(--ok)':diff<0?'var(--danger)':'var(--muted)'}">${diff>0?'▲':diff<0?'▼':'—'} ${money(Math.abs(diff))}${prv?`（${diff>=0?'+':''}${pct}%）`:''}</span>`};
+  const pM2=sum(CACHE.maint.filter(inPrev),'amount');
+  const puM=sum(CACHE.maint.filter(r=>r.paid==='未付'&&(r.date||'')<ms),'amount');
+  const puR=sum(CACHE.billing.filter(r=>r.kind==='銷項'&&r.paid==='未收'&&(r.date||'')<ms),'amount');
+
+  const donutColors={};const palette=['#2563EB','#F59E0B','#10B981','#8B5CF6','#0891B2','#EF4444','#7B8698'];
+  const catCount={};CACHE.maint.forEach(r=>{const c=r.cat||'其他';catCount[c]=(catCount[c]||0)+1});
+  const catParts=Object.keys(catCount).sort((a,b)=>catCount[b]-catCount[a]).slice(0,7).map((c,i)=>{donutColors[c]=palette[i%palette.length];return{name:c,v:catCount[c],color:palette[i%palette.length]}});
+  const plateCount={};CACHE.maint.forEach(r=>{if(r.plate)plateCount[r.plate]=(plateCount[r.plate]||0)+1});
+  const plateTop=Object.keys(plateCount).sort((a,b)=>plateCount[b]-plateCount[a]).slice(0,6);
+  const plateMax=Math.max(1,...plateTop.map(p=>plateCount[p]));
+  const recentMaint=CACHE.maint.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,8);
 
   return `<div class="head"><h1>總覽</h1><span class="sub">${td}</span><span class="spacer"></span>
     <button class="btn btn-ghost btn-sm" onclick="refresh()">重新整理</button></div>
   ${empty?`<div class="hint">目前沒有可看的資料。如果剛拿到帳號，建議先確認自己的權限，或到「基本資料 → 車輛」把車號建起來。</div>`:''}
+
+  <div class="quickadd"><div class="ic">🚚</div><div class="body">
+    <h2>今天要記什麼？</h2><div class="sub">選一個開始，或直接搜尋既有資料</div>
+    <div class="btns">${QUICK_ADD_BTNS.map(b=>`<a onclick="go('${b.k}')">${b.l}</a>`).join('')}</div>
+  </div></div>
+
   <div class="cards">
-    <div class="card"><span>本月運費收入</span><strong>${money(mF)}</strong><em>${CACHE.trips.filter(inM).length} 趟</em></div>
-    <div class="card"><span>本月維修支出</span><strong>${money(mM)}</strong><em>${CACHE.maint.filter(inM).length} 張</em></div>
-    <div class="card"><span>本月零用金</span><strong>${money(mP)}</strong><em>${CACHE.petty.filter(inM).length} 筆</em></div>
-    <div class="card ${uM?'alert':''}"><span>維修未付</span><strong>${money(uM)}</strong><em>${CACHE.maint.filter(r=>r.paid==='未付').length} 張</em></div>
-    <div class="card ${uR?'alert':''}"><span>客戶未收帳款</span><strong>${money(uR)}</strong><em>${CACHE.billing.filter(r=>r.kind==='銷項'&&r.paid==='未收').length} 筆</em></div>
-    ${typeof myTaskCard==='function'?myTaskCard():''}
+    ${kpiCardHTML('💵','本月運費收入',mF,CACHE.trips.filter(inM).length+' 趟','')}
+    ${kpiCardHTML('🔧','本月維修支出',mM,CACHE.maint.filter(inM).length+' 張',trendHTML(mM,pM2))}
+    ${kpiCardHTML('🧾','維修未付',uM,CACHE.maint.filter(r=>r.paid==='未付').length+' 張',trendHTML(uM,puM),!!uM)}
+    ${kpiCardHTML('💰','客戶未收帳款',uR,CACHE.billing.filter(r=>r.kind==='銷項'&&r.paid==='未收').length+' 筆',trendHTML(uR,puR),!!uR)}
   </div>
-  <h2>本月 vs 上月</h2>
-  <div class="tablewrap"><table><thead><tr><th></th><th class="num">本月</th><th class="num">上月</th><th>差異</th></tr></thead><tbody>
-    <tr><td>運費收入</td><td class="num">${money(mF)}</td><td class="num">${money(pF)}</td><td>${cmp(mF,pF)}</td></tr>
-    <tr><td>維修支出</td><td class="num">${money(mM)}</td><td class="num">${money(pM2)}</td><td>${cmp(mM,pM2)}</td></tr>
-    <tr><td>零用金</td><td class="num">${money(mP)}</td><td class="num">${money(pP)}</td><td>${cmp(mP,pP)}</td></tr>
-  </tbody></table></div>
-  <h2>45 天內到期（保險／定檢／稅費）</h2>
-  ${due.length?`<div class="tablewrap"><table><thead><tr><th>車號</th><th>類型</th><th>公司／機關</th><th>到期日</th><th>剩餘</th><th class="num">保費</th><th>繳費</th></tr></thead><tbody>
-    ${due.map(r=>`<tr><td><span class="plate">${esc(r.plate)}</span></td><td><span class="tag">${esc(r.cat)}</span></td>
-    <td>${esc(r.company||'—')}</td><td>${esc(r.end)}</td>
-    <td><span class="tag ${r.d<0?'d':'w'}">${r.d<0?'已過期 '+(-r.d)+' 天':r.d+' 天'}</span></td>
-    <td class="num">${money(r.premium)}</td><td><span class="tag ${r.paid==='未付'?'w':'g'}">${esc(r.paid||'—')}</span></td></tr>`).join('')}
-    </tbody></table></div>`:`<div class="empty">45 天內沒有到期項目。<br><span style="font-size:13px">到「保險／到期」把強制險、第三人責任險、定檢、牌照稅建進去，這裡就會自動提醒。</span></div>`}
+
+  <div class="dashgrid2">
+    <div class="panel"><div class="panel-head"><div class="ic">📋</div><strong>待我處理的工作</strong>
+      <a class="more" onclick="go('tasks')">查看全部 ›</a></div>
+      ${typeof taskDashPanelHTML==='function'?taskDashPanelHTML():'<div class="empty">尚未啟用工作單功能</div>'}</div>
+    <div class="panel"><div class="panel-head"><div class="ic">🔀</div><strong>簽核流程</strong>
+      <a class="more" onclick="go('workflow')">查看全部 ›</a></div>
+      ${typeof workflowDashPanelHTML==='function'?workflowDashPanelHTML():'<div class="empty">尚未設定流程</div>'}</div>
+  </div>
+
+  <div class="dashgrid3">
+    <div class="panel"><div class="panel-head"><div class="ic">🍩</div><strong>維修類別分佈</strong></div>
+      <div class="chartbox">${donutSVG(catParts)}
+        <div class="chart-legend">${catParts.length?catParts.map(p=>`<div class="row"><span class="sw" style="background:${p.color}"></span><span>${esc(p.name)}</span><span>${p.v}</span></div>`).join(''):''}</div>
+      </div></div>
+    <div class="panel"><div class="panel-head"><div class="ic">📶</div><strong>各車維修次數</strong></div>
+      ${plateTop.length?plateTop.map(p=>`<div class="barrow"><span class="lb">${esc(p)}</span>
+        <div class="bwrap"><b style="width:${Math.round(plateCount[p]/plateMax*100)}%"></b></div>
+        <span class="n">${plateCount[p]}</span></div>`).join(''):'<div class="empty">目前沒有維修紀錄</div>'}</div>
+    <div class="panel"><div class="panel-head"><div class="ic">📅</div><strong>近期到期提醒</strong>
+      <a class="more" onclick="go('insurance')">查看全部 ›</a></div>
+      ${due.length?`<div class="listwrap">${due.slice(0,6).map(r=>`<div class="listrow" style="grid-template-columns:29px 1fr auto">
+        <div class="lr-icon ${r.d<0?'red':'amb'}">📅</div>
+        <div class="lr-main"><div class="lr-title"><span class="plate">${esc(r.plate)}</span> ${esc(r.cat)}</div>
+        <div class="lr-meta"><span>${esc(r.end)}</span></div></div>
+        <div class="lr-value"><span class="tag ${r.d<0?'d':'w'}">${r.d<0?'已過期 '+(-r.d)+' 天':r.d+' 天'}</span></div>
+      </div>`).join('')}</div>`:'<div class="empty">45 天內沒有到期項目</div>'}</div>
+  </div>
+
+  <div class="panel"><div class="panel-head"><div class="ic">🔧</div><strong>最近維修紀錄</strong>
+    <a class="more" onclick="go('maint')">查看全部 ›</a></div>
+    ${recentMaint.length?`<div class="tablewrap"><table><thead><tr><th>日期</th><th>車號</th><th>類別</th><th>廠商</th><th class="num">金額</th><th>付款</th></tr></thead><tbody>
+    ${recentMaint.map(r=>`<tr><td>${esc(r.date||'—')}</td><td><span class="plate">${esc(r.plate)}</span></td>
+      <td><span class="tag">${esc(r.cat||'—')}</span></td><td>${esc(r.vendor||'—')}</td>
+      <td class="num">${money(r.amount)}</td><td><span class="tag ${r.paid==='未付'?'w':'g'}">${esc(r.paid||'—')}</span></td></tr>`).join('')}
+    </tbody></table></div>`:`<div class="empty">還沒有維修紀錄</div>`}</div>
+
   ${typeof backupReminderHTML==='function'?backupReminderHTML():''}
   <footer>資料存在 Supabase 雲端資料庫，登入同一組帳號就能看到同一份資料（依權限顯示）。</footer>`}
 
@@ -649,7 +772,13 @@ function authFormHTML(){
 }
 function shellWithTopbar(inner){
   const bell=(ME&&typeof bellHTML==='function')?bellHTML():'';
-  return `<div class="topbar">${bell}<span class="who">${ME?esc(ME.name):''}${ME&&ME.role==='admin'?' <span class="tag">管理員</span>':''}</span>
+  return `<div class="topbar">
+    <div class="tb-search"><input type="text" placeholder="搜尋…" readonly onclick="this.blur()"><span class="kbd">Ctrl K</span></div>
+    <span class="tb-spacer"></span>
+    <span class="tb-status"><span class="dot"></span>系統運作中</span>
+    ${bell}
+    <span class="who">${ME?esc(ME.name):''}${ME&&ME.role==='admin'?' <span class="tag">管理員</span>':''}</span>
+    <div class="tb-avatar">${esc(initials(ME&&ME.name))}</div>
     <button class="btn btn-ghost btn-sm" onclick="doLogout()">登出</button></div>${inner}`;
 }
 function gateShellHTML(title,msg){
@@ -672,7 +801,7 @@ function render(){
   if(ME.status==='pending'){$('#app').innerHTML=gateShellHTML('帳號等待管理員核准','您的註冊已送出，請等待管理員啟用帳號並設定權限後即可使用系統。');return}
   if(ME.status==='suspended'){$('#app').innerHTML=gateShellHTML('帳號已停權','此帳號已被管理員停權，如有疑問請聯繫系統管理員。');return}
 
-  $('#app').innerHTML=shellWithTopbar('<div class="app"><nav id="nav"></nav><main id="main"></main></div>');
+  $('#app').innerHTML=shellWithTopbar('<div class="app"><nav id="nav"></nav><main id="main"></main></div>')+mobileNavHTML();
   if(typeof renderAlertBanner==='function')renderAlertBanner();
   renderNav();
   const m=M[view];

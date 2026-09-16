@@ -27,17 +27,27 @@ function workflowHTML(){
   return `<div class="head"><h1>🔀 流程設定</h1><span class="sub">${WORKFLOWS.length} 個流程範本</span><span class="spacer"></span>
     <button class="btn btn-primary btn-sm" onclick="wfEditNew()">新增流程</button></div>
   <div id="wfEditor">${WF_EDIT ? wfEditorHTML() : ''}</div>
-  <div class="tablewrap" style="margin-top:16px"><table><thead><tr><th>名稱</th><th>適用模組</th><th>步驟數</th><th>狀態</th><th></th></tr></thead><tbody>
-    ${WORKFLOWS.length ? WORKFLOWS.map(w=>`<tr>
-      <td><strong>${esc(w.name)}</strong></td>
-      <td>${esc((M[w.module]&&M[w.module].name)||w.module||'—')}</td>
-      <td>${(w.steps||[]).length}</td>
-      <td><span class="tag ${w.active?'g':'d'}">${w.active?'啟用':'已停用'}</span></td>
-      <td><button class="rowbtn" onclick="wfEditExisting('${w.id}')">編輯</button>
-        <button class="rowbtn" onclick="wfToggleActive('${w.id}',${!w.active})">${w.active?'停用':'啟用'}</button></td>
-    </tr>`).join('') : '<tr><td colspan="5" style="padding:30px;text-align:center;color:var(--muted)">還沒有流程範本</td></tr>'}
-  </tbody></table></div>
+  <div class="panel" style="margin-top:16px">${WORKFLOWS.length?`<div class="listwrap">${WORKFLOWS.map(w=>`<div class="listrow">
+    <div class="lr-icon pur">🔀</div>
+    <div class="lr-main"><div class="lr-title">${esc(w.name)}</div>
+      <div class="lr-meta"><span>${esc((M[w.module]&&M[w.module].name)||w.module||'—')}</span><span>${(w.steps||[]).length} 個步驟</span></div>
+      <div class="lr-tags"><span class="tag ${w.active?'g':'d'}">${w.active?'啟用':'已停用'}</span></div></div>
+    <div class="lr-value"></div>
+    <div class="lr-actions"><button class="rowbtn" onclick="wfEditExisting('${w.id}')">編輯</button>
+      <button class="rowbtn" onclick="wfToggleActive('${w.id}',${!w.active})">${w.active?'停用':'啟用'}</button></div>
+  </div>`).join('')}</div>`:'<div class="empty">還沒有流程範本</div>'}</div>
   <div class="toast" id="toast"></div>`;
+}
+/* 總覽頁「簽核流程」面板；由 core.js dashHTML() 用 typeof 檢查後呼叫 */
+function workflowDashPanelHTML(){
+  if(!WORKFLOWS_LOADED) return '<div style="padding:20px;text-align:center;color:var(--muted)"><span class="spin"></span>載入中…</div>';
+  if(!WORKFLOWS.length) return '<div class="empty">還沒有流程範本</div>';
+  return `<div class="listwrap">${WORKFLOWS.slice(0,5).map(w=>`<div class="listrow" style="grid-template-columns:29px 1fr auto">
+    <div class="lr-icon pur">🔀</div>
+    <div class="lr-main"><div class="lr-title">${esc(w.name)}</div>
+      <div class="lr-meta"><span>${esc((M[w.module]&&M[w.module].name)||w.module||'—')}</span><span>${(w.steps||[]).length} 個步驟</span></div></div>
+    <div class="lr-value"><span class="tag ${w.active?'g':'d'}">${w.active?'啟用':'已停用'}</span></div>
+  </div>`).join('')}</div>`;
 }
 function wfEditNew(){ WF_EDIT = newWorkflowDraft(); render() }
 function wfEditExisting(id){

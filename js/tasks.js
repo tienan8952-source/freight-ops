@@ -28,6 +28,18 @@ function myTaskCard(){
   return `<div class="card ${overdue.length?'alert':''}" onclick="go('tasks')" style="cursor:pointer">
     <span>待我處理</span><strong>${todo.length}</strong><em>${overdue.length?`其中逾期 ${overdue.length} 件`:'目前沒有逾期'}</em></div>`;
 }
+/* 總覽頁「待我處理的工作」面板；由 core.js dashHTML() 用 typeof 檢查後呼叫 */
+function taskDashPanelHTML(){
+  if(!TASKS_LOADED) return '<div style="padding:20px;text-align:center;color:var(--muted)"><span class="spin"></span>載入中…</div>';
+  const todo = TASKS.filter(isTodoForMe).slice(0,5);
+  if(!todo.length) return '<div class="empty">目前沒有待處理的工作</div>';
+  return `<div class="listwrap">${todo.map(t=>`<div class="listrow" style="grid-template-columns:29px 1fr auto" onclick="taskOpenDetail('${t.id}')" role="button">
+    <div class="lr-icon ${isOverdue(t)?'red':'pri'}">📋</div>
+    <div class="lr-main"><div class="lr-title">${esc(t.title)}</div>
+      <div class="lr-meta"><span>${t.module?esc((M[t.module]&&M[t.module].name)||t.module):'一般'}</span>${t.due?`<span>期限 ${esc(t.due)}</span>`:''}</div></div>
+    <div class="lr-value"><span class="tag ${isOverdue(t)?'d':''}">${TASK_PRIORITY_LABEL[t.priority]||t.priority}</span></div>
+  </div>`).join('')}</div>`;
+}
 function taskSendButton(moduleKey, rec){
   if(!canSee('tasks')) return '';
   return `<button class="rowbtn" onclick="openTaskCreate('${moduleKey}','${rec.id}')">送簽</button>`;
@@ -106,16 +118,18 @@ function tasksHTML(){
   return `<div class="head"><h1>📋 我的工作</h1><span class="spacer"></span>
     <button class="btn btn-primary btn-sm" onclick="openTaskCreate()">＋ 新增工作單</button></div>
   <div class="actions" style="margin-bottom:14px">${tab('todo','待我處理',todo.length)}${tab('sent','我送出的',sent.length)}${tab('done','已完成',done.length)}</div>
-  <div class="tablewrap"><table><thead><tr><th>標題</th><th>模組</th><th>優先</th><th>期限</th><th>狀態</th><th>對象</th></tr></thead><tbody>
-    ${list.length?list.map(t=>`<tr style="cursor:pointer" onclick="taskOpenDetail('${t.id}')">
-      <td><strong>${esc(t.title)}</strong>${t.note?`<div class="meta">${esc(t.note)}</div>`:''}</td>
-      <td>${t.module?esc((M[t.module]&&M[t.module].name)||t.module):'—'}</td>
-      <td><span class="tag">${TASK_PRIORITY_LABEL[t.priority]||t.priority}</span></td>
-      <td>${t.due?`<span class="tag ${isOverdue(t)?'d':''}">${esc(t.due)}${isOverdue(t)?'（逾期）':''}</span>`:'—'}</td>
-      <td><span class="tag ${t.status==='done'?'g':t.status==='cancelled'?'d':''}">${t.status==='open'?'處理中':t.status==='done'?'已完成':'已取消'}</span></td>
-      <td>${t.to_user?esc(uploaderLabel(t.to_user)):(t.to_dept?esc(deptName(t.to_dept)):'—')}</td>
-    </tr>`).join(''):`<tr><td colspan="6" style="padding:30px;text-align:center;color:var(--muted)">這個分頁沒有工作單</td></tr>`}
-  </tbody></table></div>
+  <div class="panel">${list.length?`<div class="listwrap">${list.map(t=>`<div class="listrow" onclick="taskOpenDetail('${t.id}')" role="button">
+    <div class="lr-icon ${isOverdue(t)?'red':'pri'}">📋</div>
+    <div class="lr-main"><div class="lr-title">${esc(t.title)}</div>
+      <div class="lr-meta"><span>${t.module?esc((M[t.module]&&M[t.module].name)||t.module):'一般'}</span>
+        <span>對象：${t.to_user?esc(uploaderLabel(t.to_user)):(t.to_dept?esc(deptName(t.to_dept)):'—')}</span>
+        ${t.note?`<span>${esc(t.note)}</span>`:''}</div>
+      <div class="lr-tags"><span class="tag">${TASK_PRIORITY_LABEL[t.priority]||t.priority}</span>
+        ${t.due?`<span class="tag ${isOverdue(t)?'d':''}">${esc(t.due)}${isOverdue(t)?'（逾期）':''}</span>`:''}
+        <span class="tag ${t.status==='done'?'g':t.status==='cancelled'?'d':''}">${t.status==='open'?'處理中':t.status==='done'?'已完成':'已取消'}</span></div>
+    </div>
+    <div class="lr-value"></div>
+  </div>`).join('')}</div>`:`<div class="empty">這個分頁沒有工作單</div>`}</div>
   <div class="toast" id="toast"></div>`;
 }
 function taskSetTab(k){ TASK_TAB=k; render() }
