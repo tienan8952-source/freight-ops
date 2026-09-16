@@ -19,6 +19,12 @@
 | 想用同一套方法開一個全新專案 | [new-project.md](new-project.md) |
 | 有哪些可以重複用的指令（新增功能/修bug/部署…） | `.claude/commands/`（見 repo 根目錄 `CLAUDE.md`） |
 | 想抽這個專案的架構去做別的專案 | 根目錄 `template/README.md` |
+| 任務包（給 Claude Code 執行的完整任務指示）存在哪 | [tasks/README.md](tasks/README.md) |
+| 已知但還沒處理/決定不處理的小問題 | [known-issues.md](known-issues.md) |
+| 哪些資訊還沒查到、需要使用者回答 | [pending-info.md](pending-info.md) |
+| Supabase/GitHub 的實際設定值快照（可重建設定用） | [config-snapshot.md](config-snapshot.md) |
+| 電腦壞了/Supabase 專案沒了/資料被誤刪，怎麼從備份復原 | [recovery.md](recovery.md) |
+| 平常固定該做的維護（每週/每月/每季） | [maintenance.md](maintenance.md) |
 
 第一次接觸這個 repo，建議看順序：根目錄 `README.md` → 這份文件地圖 →
 `工具與帳號清單.md` → `schema.md`。
