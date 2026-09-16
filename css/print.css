@@ -1,0 +1,53 @@
+/* ==================== 列印樣式（階段 F）====================
+   只有按「列印」或瀏覽器列印時套用。目標：只印標題、篩選摘要、資料，
+   黑白也看得清楚，交給會計/廠商核對用。 */
+.print-only{display:none}
+
+@media print{
+  @page{ margin:16mm 12mm; }
+
+  body{background:#fff;padding-bottom:0 !important}
+  .app,main,#app{background:#fff !important}
+  .topbar,nav,.mobnav,.quick-entry,.quickadd,.filters,.actions,
+  .btn,.rowbtn,.bell,.belldrop,.actionbanner,.dropzone,footer,
+  .dashgrid2,.dashgrid3,.cards,.summary .alert,dialog{display:none !important}
+
+  .app{display:block !important}
+  main{padding:0 !important;max-width:none}
+  .split{display:block !important}
+  .split section:first-child{display:none !important} /* 表單不印，只印清單 */
+
+  .print-only{display:block}
+  .print-head{
+    display:flex !important;justify-content:space-between;align-items:baseline;
+    border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:10px;font-size:12px;color:#000;
+  }
+  .print-head strong{font-size:15px}
+  .print-filters{font-size:11px;color:#000;margin-bottom:8px}
+
+  .panel,.tablewrap,table,.card{box-shadow:none !important;border:1px solid #000 !important}
+  .head{border:none;margin-bottom:8px}
+  h1{font-size:16px;color:#000}
+  .head .sub{color:#000}
+
+  /* 卡片式清單列在列印時排成緊湊的一行，接近表格觀感 */
+  .listrow{
+    display:flex !important;align-items:center;gap:8px;border-top:1px solid #000 !important;
+    padding:5px 4px;break-inside:avoid;
+  }
+  .listwrap .listrow:first-child{border-top:1px solid #000 !important}
+  .lr-icon{display:none !important}
+  .lr-main{flex:1}
+  .lr-actions{display:none !important}
+  .lr-value{color:#000}
+
+  table{border-collapse:collapse;width:100%}
+  th,td{border:1px solid #000 !important;color:#000 !important;padding:4px 6px !important}
+  th{background:#eee !important}
+
+  /* 淡彩標籤在黑白列印時改成純框線，避免看不清楚 */
+  .tag{background:none !important;border:1px solid #000 !important;color:#000 !important}
+  .plate{background:#fff !important;border:1.5px solid #000 !important;color:#000 !important}
+
+  a{color:#000 !important;text-decoration:none !important}
+}

@@ -471,10 +471,26 @@ function filtered(){
     return true}).sort((a,b)=>{
     if(view==='insurance')return (a.end||'').localeCompare(b.end||'');
     return (b[dk]||'').localeCompare(a[dk]||'')})}
+function printFilterSummaryText(){
+  const m=M[view],parts=[];
+  Object.entries(F).forEach(([k,v])=>{
+    if(!v)return;
+    if(k==='_from')parts.push('起：'+v);else if(k==='_to')parts.push('迄：'+v);
+    else if(k==='_q')parts.push('關鍵字：'+v);
+    else parts.push((COLMAP[k]||k)+'：'+v);
+  });
+  return parts.length?parts.join('　'):'（無篩選條件，顯示全部）';
+}
+function printHeadHTML(){
+  const m=M[view];
+  return `<div class="print-only print-head"><strong>貨運行營運系統｜${m?m.name:''}</strong><span>列印日期：${today()}</span></div>
+    <div class="print-only print-filters">篩選條件：${esc(printFilterSummaryText())}</div>`;
+}
+function printPage(){window.print()}
 function listHTML(){
   const m=M[view],rows=filtered(),all=CACHE[view];
   const dk=m.fields.find(f=>f.t==='date')?.k;
-  let f=`<div class="filters">`;
+  let f=printHeadHTML()+`<div class="filters">`;
   m.fields.filter(x=>x.t==='select').forEach(x=>{
     const o=[...new Set(all.map(r=>r[x.k]).filter(Boolean))].sort();
     f+=`<div class="field"><label>${x.l}</label><select onchange="setF('${x.k}',this.value)">
@@ -668,7 +684,10 @@ function payrollHTML(){
     return{d,n:t.length,nT,fr,bt,bp,bo,de,total:(Number(d.base)||0)+bt+bp+bo-de}});
   return `<div class="head"><h1>薪資計算</h1><span class="sub">依「出車報班」自動彙總</span><span class="spacer"></span>
     <input type="month" value="${pMonth}" onchange="pMonth=this.value;render()" style="width:160px">
+    <button class="btn btn-ghost btn-sm" onclick="printPage()">列印</button>
     <button class="btn btn-ghost btn-sm" onclick="exportPayroll()">匯出 Excel</button></div>
+  <div class="print-only print-head"><strong>貨運行營運系統｜薪資計算</strong><span>列印日期：${today()}</span></div>
+  <div class="print-only print-filters">月份：${pMonth}</div>
   ${ds.length?'':`<div class="hint">還沒有駕駛資料。先到「基本資料 → 駕駛」建立駕駛，並填底薪、每趟抽成或運費抽成％，這裡就會自動算。</div>`}
   <div class="summary"><div><span>${pMonth} 應付薪資總額</span><strong>${money(rows.reduce((a,r)=>a+r.total,0))}</strong></div>
     <div><span>人數</span><strong>${rows.length}</strong></div>
@@ -773,7 +792,7 @@ function authFormHTML(){
 function shellWithTopbar(inner){
   const bell=(ME&&typeof bellHTML==='function')?bellHTML():'';
   return `<div class="topbar">
-    <div class="tb-search"><input type="text" placeholder="搜尋…" readonly onclick="this.blur()"><span class="kbd">Ctrl K</span></div>
+    <div class="tb-search"><input type="text" id="tbSearch" placeholder="搜尋…"><span class="kbd">Ctrl K</span></div>
     <span class="tb-spacer"></span>
     <span class="tb-status"><span class="dot"></span>系統運作中</span>
     ${bell}
@@ -811,10 +830,42 @@ function render(){
   if(!editId)pending=[];
   $('#main').innerHTML=`<div class="head"><h1>${m.icon} ${m.name}</h1>
     <span class="sub">${CACHE[view].length} 筆</span><span class="spacer"></span>
+    <button class="btn btn-ghost btn-sm" onclick="printPage()">列印</button>
     <button class="btn btn-ghost btn-sm" onclick="refresh()">重新整理</button></div>
     <div class="split"><section>${formHTML(rec)}</section>
     <section><h2>紀錄</h2><div id="listArea">${listHTML()}</div></section></div>`;
   drawThumbs()
 }
+/* ==================== 階段 F：鍵盤快捷鍵 ====================
+   Ctrl+K 聚焦搜尋／Ctrl+S 表單頁存檔／Ctrl+Enter 存檔並清空繼續輸入／
+   Esc 取消編輯或關閉彈窗／Alt+N 新增。只在功能鍵組合時攔截，
+   不影響一般輸入。 */
+document.addEventListener('keydown',(e)=>{
+  if(e.key==='Escape'){
+    if(document.querySelector('dialog[open]'))return; // 讓 <dialog> 走瀏覽器內建的 Esc 關閉
+    if(editId){go(view)}
+    return;
+  }
+  if((e.ctrlKey||e.metaKey)&&!e.altKey&&(e.key==='k'||e.key==='K')){
+    e.preventDefault();const s=$('#tbSearch');if(s)s.focus();
+    return;
+  }
+  if((e.ctrlKey||e.metaKey)&&!e.altKey&&(e.key==='s'||e.key==='S')){
+    const form=document.querySelector('#main form');
+    if(form){e.preventDefault();form.requestSubmit?form.requestSubmit():form.dispatchEvent(new Event('submit',{cancelable:true}))}
+    return;
+  }
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){
+    const form=document.querySelector('#main form');
+    if(form){e.preventDefault();form.requestSubmit?form.requestSubmit():form.dispatchEvent(new Event('submit',{cancelable:true}))}
+    return;
+  }
+  if(e.altKey&&(e.key==='n'||e.key==='N')){
+    const m=M[view];
+    if(m&&m.fields){e.preventDefault();editId='';render();focusFirstField()}
+    return;
+  }
+});
+
 /* boot() 是在所有功能模組 js 檔都載入完成後，由 index.html 最後一個 <script> 呼叫，
    避免 onBootActive／navBadge／myTaskCard 等擴充點在還沒定義時就被呼叫到。 */
