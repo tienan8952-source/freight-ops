@@ -6,10 +6,10 @@ let TASKS = [], TASKS_LOADED = false, TASK_TAB = 'todo';
 let TASK_CREATE = null, TASK_DETAIL_ID = null, TASK_EVENTS = [];
 const TASK_PRIORITY_LABEL = {low:'低',normal:'一般',high:'高'};
 
-async function onBootActive(){
+BOOT_HOOKS.push(async()=>{
   try{ await loadWorkflows() }catch(_){}
   if(canSee('tasks')){ try{ await loadTasks() }catch(_){} }
-}
+});
 async function loadTasks(){
   try{ TASKS = await api('tasks','GET',{query:'?select=*&order=updated_at.desc'}) }catch(e){ TASKS=[] }
   TASKS_LOADED = true;
@@ -27,10 +27,6 @@ function myTaskCard(){
   const overdue = todo.filter(isOverdue);
   return `<div class="card ${overdue.length?'alert':''}" onclick="go('tasks')" style="cursor:pointer">
     <span>待我處理</span><strong>${todo.length}</strong><em>${overdue.length?`其中逾期 ${overdue.length} 件`:'目前沒有逾期'}</em></div>`;
-}
-function navBadge(k){
-  if(k==='tasks') return TASKS.filter(isTodoForMe).length || '';
-  return '';
 }
 function taskSendButton(moduleKey, rec){
   if(!canSee('tasks')) return '';

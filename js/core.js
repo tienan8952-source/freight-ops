@@ -12,6 +12,7 @@ const AUTH={
   clear(){['fops.at','fops.rt','fops.exp'].forEach(k=>localStorage.removeItem(k))}
 };
 let ME=null,PROFILES=[],DEPTS=[];
+const BOOT_HOOKS=[]; // 其他 js 檔用 BOOT_HOOKS.push(async()=>{...}) 掛入登入後才需要做的初始化
 
 async function authFetch(path,body){
   const r=await fetch(`${SUPABASE_URL}/auth/v1${path}`,{method:'POST',
@@ -75,7 +76,7 @@ async function boot(){
       await loadAll();
       await loadDepts();
       if(ME.role==='admin')await loadProfiles();
-      if(typeof onBootActive==='function')await onBootActive();
+      for(const hook of BOOT_HOOKS){try{await hook()}catch(_){}}
     }
   }catch(e){AUTH.clear();ME=null}
   render();
