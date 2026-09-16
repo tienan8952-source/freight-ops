@@ -107,4 +107,20 @@
 
 ## 已驗證
 
-（復原演練完成後會在這裡補上：演練日期、實際跑的情境、發現的問題。）
+**演練日期：2026-09-16**
+
+實際演練的是**情境三「資料被誤刪」**，做法跟原規格（建一張新測試表）不同，改用「在既有的 `customers` 表（演練當時是空表）插入測試資料 → 備份 → REST API 直接刪除模擬誤刪 → 用 `restore-table.ps1` 還原 → 驗證 → 清乾淨」，理由：
+- 這個系統只能透過 PostgREST 打 REST API，沒有直接的 Postgres 連線可以下 `CREATE TABLE`/`DROP TABLE`（DDL），建測試表需要使用者手動到 SQL Editor 執行，會中斷任務等待；用既有表的資料列來演練不需要 DDL，不用中斷就能完整跑完
+- 這樣演練的情境（資料列被誤刪）也更貼近 `docs/incident.md`「資料被誤刪」實際會發生的狀況，比「整張表消失」更寫實
+
+**演練步驟與結果**：
+1. 用 service_role key 直接對 `customers` 表 REST insert 3 筆測試資料（`TP07演練測試客戶A/B/C`，含中文備註）
+2. 執行 `.\scripts\backup.ps1`，確認 `backups\2026-09-16\customers.json` 正確匯出這 3 筆、中文內容完整無誤
+3. 用 REST DELETE 模擬誤刪，確認 `customers` 表變回 0 筆
+4. 執行 `.\scripts\restore-table.ps1 -Table customers -File backups\2026-09-16\customers.json`，還原成功：補回 3 筆、略過 0 筆
+5. 用 REST GET 驗證還原後的 3 筆資料，id、`name`、`note`（含中文）都跟還原前完全一致
+6. 清掉測試資料，`customers` 表恢復演練前的 0 筆狀態
+
+**演練中發現並已修正的問題**：
+- 插入測試資料時發現 Windows PowerShell 5.1 的 `Invoke-RestMethod` 在 `-Body` 傳字串時會用系統預設編碼重新編碼，中文會變亂碼——這其實就是 [docs/known-issues.md](known-issues.md) 原本記錄的「notify.ps1 中文亂碼」那個問題的真正根因，不是 Supabase 顯示問題。修法：一律把 JSON 字串轉成 UTF-8 位元組陣列（`[System.Text.Encoding]::UTF8.GetBytes(...)`）再傳給 `-Body`。已經修正 `scripts/notify.ps1`、`scripts/restore-table.ps1`、`scripts/backup-storage.ps1`，並實測確認中文正確送達、正確讀回。known-issues.md 已同步更新為「已解決」。
+- 另外發現：用 Write/Edit 工具建立或修改 `.ps1` 檔案時，如果檔案沒有 UTF-8 BOM，Windows PowerShell 5.1 會用系統內碼（非 UTF-8）讀取整份腳本，導致腳本裡的中文字串把後面的語法也讀壞（引號、括號位置整個錯位），直接噴 parse error，不是邏輯錯誤。已把這次任務包新增的 `.ps1` 檔案都轉成有 BOM 的 UTF-8。這一條記錄進 [docs/tools/powershell.md](tools/powershell.md)。

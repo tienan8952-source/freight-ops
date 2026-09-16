@@ -61,7 +61,12 @@ $headers = @{
 try {
   # Supabase 會擋掉「看起來像瀏覽器」的 secret key 請求；Invoke-RestMethod 預設的 User-Agent
   # 會被誤判，明確帶一個非瀏覽器的 User-Agent 才不會被拒絕（401 Forbidden use of secret API key in browser）。
-  Invoke-RestMethod -Method Post -Uri "$url/rest/v1/agent_alerts" -Headers $headers -Body $payload -UserAgent 'notify.ps1/1.0' | Out-Null
+  #
+  # Windows PowerShell 5.1 的 Invoke-RestMethod 在 -Body 傳字串時，會用系統預設編碼（不是 UTF-8）
+  # 重新編碼再送出，中文內容會變亂碼（不是 Supabase 端顯示問題，是這裡送出前就壞了）。
+  # 一律先轉成 UTF-8 位元組陣列再送，才能正確送出中文。
+  $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payload)
+  Invoke-RestMethod -Method Post -Uri "$url/rest/v1/agent_alerts" -Headers $headers -Body $payloadBytes -UserAgent 'notify.ps1/1.0' | Out-Null
   Write-Host "已送出通知：[$Level] $Title"
 } catch {
   Write-Error "送出失敗：$($_.Exception.Message)"

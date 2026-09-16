@@ -1,4 +1,4 @@
-<#
+﻿<#
 用法：
   .\scripts\restore-table.ps1 -Table maint -File backups\2026-09-16\maint.json
 
@@ -63,8 +63,11 @@ $skipped = 0
 foreach ($row in $backupRows) {
   if ($existingIds.ContainsKey($row.id)) { $skipped++; continue }
   $body = $row | ConvertTo-Json -Depth 20 -Compress
+  # 跟 notify.ps1 同一個坑：Invoke-RestMethod 傳字串 -Body 會用系統編碼重送，中文會壞掉，
+  # 一律轉成 UTF-8 位元組陣列再送。
+  $bodyBytes = [System.Text.Encoding]::UTF8.GetBytes($body)
   try {
-    Invoke-RestMethod -Method Post -Uri "$url/rest/v1/$Table" -Headers $headers -Body $body -UserAgent 'restore-table.ps1/1.0' | Out-Null
+    Invoke-RestMethod -Method Post -Uri "$url/rest/v1/$Table" -Headers $headers -Body $bodyBytes -UserAgent 'restore-table.ps1/1.0' | Out-Null
     $added++
   } catch {
     Write-Warning "還原這筆失敗（id=$($row.id)）：$($_.Exception.Message)"

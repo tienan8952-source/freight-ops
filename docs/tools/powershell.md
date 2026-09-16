@@ -31,6 +31,30 @@
   （只影響這台電腦、這個使用者帳號，不影響其他人）。
 - **notify.ps1 一開始打 Supabase 被 401**：見
   `docs/tools/supabase.md` 的對應坑，解法是帶自訂 User-Agent。
+- **`Invoke-RestMethod -Body <字串>` 送中文會變亂碼**（2026-09-16，TP-07
+  復原演練時查出）：Windows PowerShell 5.1 的 `Invoke-RestMethod` 傳字串
+  當 `-Body` 時，會用系統預設編碼（不是 UTF-8）重新編碼再送出，中文在
+  送出前就壞了——這才是原本以為的「notify.ps1 中文亂碼」的真正根因，
+  不是 Supabase 顯示問題。解法：先把 JSON 字串轉成 UTF-8 位元組陣列再送：
+  ```powershell
+  $bytes = [System.Text.Encoding]::UTF8.GetBytes($jsonString)
+  Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $bytes
+  ```
+  `scripts/notify.ps1`、`scripts/restore-table.ps1`、
+  `scripts/backup-storage.ps1` 都已經這樣修正。**以後任何新腳本只要用
+  `Invoke-RestMethod` 送含中文的 JSON body，都要記得套這個寫法。**
+- **`.ps1` 檔案沒有 UTF-8 BOM，中文腳本會直接 parse error**（2026-09-16）：
+  用一般文字工具（例如 Write 工具）新建或改寫含中文的 `.ps1` 檔案時，如果
+  存檔沒有帶 UTF-8 BOM，Windows PowerShell 5.1 會用系統內碼讀取整份腳本，
+  中文字元被讀壞後連帶讓後面的引號、括號位置錯位，直接跳出一堆看似無關
+  的語法錯誤（例如「遺漏右大括號」「字串缺少結束字元」），很容易誤判成
+  邏輯寫錯。解法：確認檔案是 UTF-8 with BOM（開頭三個位元組是
+  `EF BB BF`），沒有的話用下面指令轉一次：
+  ```powershell
+  $p = "路徑\你的.ps1"
+  $content = [System.IO.File]::ReadAllText($p, [System.Text.Encoding]::UTF8)
+  [System.IO.File]::WriteAllText($p, $content, (New-Object System.Text.UTF8Encoding($true)))
+  ```
 
 ## 5. 限制與風險
 - `RemoteSigned` 執行原則允許本機自己寫的腳本執行、但下載回來的腳本要

@@ -50,7 +50,8 @@ New-Item -ItemType Directory -Force -Path $destRoot | Out-Null
 function Get-ObjectsRecursive {
   param([string]$Prefix)
   $body = @{ prefix = $Prefix; limit = 1000; offset = 0 } | ConvertTo-Json -Compress
-  $entries = Invoke-RestMethod -Method Post -Uri "$url/storage/v1/object/list/$bucket" -Headers $headers -Body $body -UserAgent 'backup-storage.ps1/1.0'
+  $bodyBytes = [System.Text.Encoding]::UTF8.GetBytes($body)
+  $entries = Invoke-RestMethod -Method Post -Uri "$url/storage/v1/object/list/$bucket" -Headers $headers -Body $bodyBytes -UserAgent 'backup-storage.ps1/1.0'
   $files = @()
   foreach ($e in $entries) {
     $path = if ($Prefix) { "$Prefix/$($e.name)" } else { $e.name }
