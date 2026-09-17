@@ -126,6 +126,31 @@ path（Storage 內路徑）、name、mime、size、module + ref_id（可選，�
 level（action/info/done）、title、body、session（區分不同次執行）、
 resolved_at。只有 admin 能讀，一般使用者不受影響。
 
+## 原始層／匯入紀錄（`supabase/migrations/schema-v4-raw-layer.sql`）
+
+跟業務表的匯入方式（`js/importer.js`，欄位對欄位直接寫進業務表）是平行的
+另一條路線：整份 Excel 每一列原封不動存進 `raw_records.raw`（JSONB），
+不做任何欄位裁切或型態轉換，下個月 Excel 欄位變了也不用改表結構。
+畫面見 `js/raw-import.js`（匯入、匯入紀錄）與 `js/raw-view.js`（顯示、
+欄位對照設定）。
+
+### import_batches（匯入批次）
+| 欄位 | 意思 |
+|---|---|
+| file_name / file_hash | 檔案名稱／檔案指紋（SHA-256），同指紋再匯會提示「這個檔案匯過」但不會擋 |
+| data_type | 資料類型標籤，使用者自訂文字（例如「司機薪資表」） |
+| period | 所屬期間（年月，可空） |
+| imported_by / imported_at | 匯入者／匯入時間 |
+| total_rows | 該批總列數 |
+| status | 進行中／完成／已撤銷。撤銷不刪這筆紀錄，只改狀態，讓使用者看得到匯過幾次 |
+| note | 備註 |
+
+### raw_records（原始資料）
+batch_id（外鍵，ON DELETE CASCADE）、row_no（原始列號）、
+raw（JSONB，整列原始內容）、created_at。對 `raw` 建 GIN 索引，
+對 `batch_id` 建一般索引。整批撤銷＝刪除該批全部 `raw_records`（`import_batches`
+那筆紀錄保留、狀態改「已撤銷」）。
+
 ## 關聯圖（Mermaid）
 
 ```mermaid
@@ -157,5 +182,8 @@ erDiagram
 - `tasks`/`task_events`/`notifications`：依 `from_user`/`to_user`/
   `to_dept`/`user_id` 判斷是否跟自己有關，admin 一律可見。
 - `agent_alerts`：只有 admin 能讀，一般使用者完全看不到這張表。
+- `import_batches`/`raw_records`/`field_mappings`：依 `imports.view`/
+  `imports.create`/`imports.revoke`/`mappings.view`/`mappings.edit`
+  五把新權限鍵判斷（`has_perm()` 機制）。
 
 詳細 SQL 見 `supabase/schema-v2.sql`、`supabase/schema-v3.sql`。
