@@ -121,6 +121,7 @@ async function rawImportRun(){
   try{ await api('import_batches','PATCH',{body:{status:'完成'},query:`?id=eq.${batchId}`}) }catch(e){}
   RAWIMP.running=false;
   RAW_BATCHES_LOADED=false;
+  RAW_TYPES_LOADED=false; // 匯入完成後這個資料類型可能是新的，「資料顯示」／「欄位對照設定」的下拉選單要重新抓
   if(prog()) prog().innerHTML = `<div class="hint">匯入完成：成功 ${RAWIMP.ok} 列、失敗 ${RAWIMP.fails.length} 列。</div>
     ${RAWIMP.fails.length?`<div class="tablewrap" style="max-height:220px;overflow:auto"><table><tbody>
       ${RAWIMP.fails.map(f=>`<tr><td>第 ${f.rowNo} 列</td><td>${esc(f.reason)}</td></tr>`).join('')}
@@ -198,6 +199,7 @@ async function revokeRawBatch(id){
     await api('import_batches','PATCH',{body:{status:RAW_REVOKED},query:`?id=eq.${id}`});
     delete RAW_EXPANDED[id];
     await loadRawBatches();
+    RAW_TYPES_LOADED=false; // 撤銷後這個類型可能整個沒有有效批次了，選單也要重新抓
     render(); toast('已撤銷');
   }catch(e){ toast('撤銷失敗：'+e.message,1) }
 }
