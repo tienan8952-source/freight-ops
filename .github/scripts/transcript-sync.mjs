@@ -112,13 +112,15 @@ async function loadKnownVideoIds() {
   return known;
 }
 
-async function writeNotionPage({ videoId, title, published, content }) {
+async function writeNotionPage({ videoId, title, published, content, hasTranscript }) {
   const body = {
     parent: { database_id: NOTION_DATABASE_ID },
     properties: {
       '標題': { title: [{ text: { content: title.slice(0, 2000) } }] },
-      '類型': { select: { name: '泛科學院逐字稿' } },
+      '類型': { select: { name: hasTranscript ? '逐字稿' : '無字幕' } },
+      '狀態': { select: { name: '未讀' } },
       '日期': { date: { start: published || new Date().toISOString().slice(0, 10) } },
+      '來源': { rich_text: [{ text: { content: '泛科學院 YouTube RSS' } }] },
       '影片ID': { rich_text: [{ text: { content: videoId } }] },
       '網址': { url: `https://www.youtube.com/watch?v=${videoId}` },
       '內容': { rich_text: chunkText(content).map(c => ({ text: { content: c } })) }
@@ -141,7 +143,7 @@ async function main() {
     try { transcript = await fetchTranscript(v.videoId); }
     catch (e) { console.warn(`[${v.videoId}] 抓字幕失敗：${e.message}`); }
     try {
-      await writeNotionPage({ ...v, content: transcript || '（無字幕）' });
+      await writeNotionPage({ ...v, content: transcript || '這支影片沒有字幕可抓取。', hasTranscript: !!transcript });
       console.log(`[${v.videoId}] 已寫入 Notion：${v.title}${transcript ? '' : '（無字幕）'}`);
       ok++;
     } catch (e) {

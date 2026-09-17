@@ -37,6 +37,13 @@
 | Supabase/GitHub 的實際設定值快照（可重建設定用） | [config-snapshot.md](config-snapshot.md) |
 | 電腦壞了/Supabase 專案沒了/資料被誤刪，怎麼從備份復原 | [recovery.md](recovery.md) |
 | 平常固定該做的維護（每週/每月/每季） | [maintenance.md](maintenance.md) |
+| 四個專案（營運系統/自動化排程/外接AI/Web與App）怎麼分工、進度總表 | [briefs/00-總控.md](briefs/00-總控.md) |
+| 營運系統專案指示（給 claude.ai／GPT 對話專案貼） | [briefs/01-營運系統.md](briefs/01-營運系統.md) |
+| 自動化排程專案指示 | [briefs/02-自動化排程.md](briefs/02-自動化排程.md) |
+| 外接 AI 專案指示 | [briefs/03-外接AI.md](briefs/03-外接AI.md) |
+| Web 與 App 專案指示 | [briefs/04-Web與App.md](briefs/04-Web與App.md) |
+| 給 GPT 專案貼的交接說明（GPT 該做/不該做什麼） | [handoff-gpt.md](handoff-gpt.md) |
+| 「我想做 X」該用哪個工具、代價是什麼；Claude Code 能力明細 | [capabilities.md](capabilities.md) |
 
 第一次接觸這個 repo，建議看順序：根目錄 `README.md` → 這份文件地圖 →
 `工具與帳號清單.md` → `schema.md`。
