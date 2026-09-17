@@ -1,0 +1,50 @@
+# 每週自動備份 Supabase 資料庫（全部資料表 → JSON），打包後放進 GitHub Releases。
+#
+# 為什麼放 Releases、不是放 repo 的 backups/ 目錄：
+# repo 的 .gitignore 本來就把 backups/ 排除在 git 之外（見 scripts/backup.ps1 的說明），
+# 這是既有決定：避免每次備份的資料檔案把 git 歷史越養越大。放 Release 一樣有日期、
+# 一樣能下載，又不會讓 repo 大小持續膨脹或讓每週的 commit 記錄塞滿雜訊。
+#
+# 需要的 GitHub Secrets（Settings → Secrets and variables → Actions → New repository secret）：
+#   SUPABASE_URL          Supabase 專案 URL
+#   SUPABASE_SERVICE_KEY  service_role secret key（Project Settings → API），會繞過 RLS 讀到全部資料
+name: 備份 Supabase 資料
+
+on:
+  schedule:
+    - cron: '0 18 * * 0' # 每週日 UTC 18:00（台灣時間週一 02:00）
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 匯出各資料表為 JSON
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: node .github/scripts/backup-export.mjs
+
+      - name: 打包並建立 GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          DATE=$(date -u +%Y-%m-%d)
+          ZIP="freight-ops-backup-$DATE.zip"
+          cd backup-out
+          zip -r "../$ZIP" .
+          cd ..
+          gh release create "backup-$DATE-$GITHUB_RUN_NUMBER" "$ZIP" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "資料庫備份 $DATE" \
+            --notes "GitHub Actions 每週自動備份，內含全部資料表 JSON 與 manifest.json（各表筆數、Storage 檔案數）。"

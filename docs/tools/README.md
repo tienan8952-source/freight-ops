@@ -16,6 +16,8 @@
 | [Git](git.md) | 版本控制 | 使用中 |
 | [PowerShell](powershell.md) | 本機腳本執行環境（notify.ps1 等） | 使用中 |
 | [notify.ps1 / agent_alerts](notify-agent-alerts.md) | Claude Code 主動回報進度 | 已設定未用（僅 Claude Code 呼叫，尚無日常人工使用） |
+| [GitHub Actions](github-actions.md) | 跨系統排程（每週備份、每日逐字稿同步） | 使用中 |
+| [Notion API](notion-api.md) | 逐字稿與 GPT/Claude 交接內容存放處 | 使用中 |
 | [LINE Messaging API](line-messaging-api.md) | 未來可能的行動端通知 | 未接但已規劃 |
 | [Supabase Edge Functions](supabase-edge-functions.md) | 未來可能的伺服器端邏輯 | 未接但已規劃 |
 
@@ -27,4 +29,5 @@
 - **檔案**：[Supabase](supabase.md)（Storage bucket `scans`）
 - **通知**：[notify.ps1 / agent_alerts](notify-agent-alerts.md)、[PowerShell](powershell.md)、（未來）[LINE Messaging API](line-messaging-api.md)
 - **文件**：本資料夾與 `docs/` 底下其他文件（見 [docs/index.md](../index.md)）
-- **自動化**：[PowerShell](powershell.md)、[Node / npm](node-npm.md)（本機驗證腳本）、（未來）[Supabase Edge Functions](supabase-edge-functions.md)
+- **自動化**：[PowerShell](powershell.md)、[Node / npm](node-npm.md)（本機驗證腳本）、[GitHub Actions](github-actions.md)（跨系統排程）、（未來）[Supabase Edge Functions](supabase-edge-functions.md)
+- **跨工具搬資料**：[GitHub Actions](github-actions.md) + [Notion API](notion-api.md)（泛科學院逐字稿）
