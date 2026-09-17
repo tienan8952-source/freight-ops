@@ -47,6 +47,12 @@ function rawImportHTML(){
     <div class="field c12"><label>選擇檔案（.csv 或 .xlsx）</label>
       <input type="file" accept=".csv,.xlsx,.xls" onchange="if(this.files[0])rawLoadFile(this.files[0])"></div>
   </div>
+  <div class="dropzone" id="rawDropzone" style="margin-top:12px"
+    ondragover="event.preventDefault();this.classList.add('over')"
+    ondragleave="this.classList.remove('over')"
+    ondrop="rawDropFile(event)">
+    或把 .csv／.xlsx 檔案拖曳到這裡
+  </div>
   <div id="rawImpBody">${rawImpBodyHTML()}</div>
   <div class="toast" id="toast"></div>`;
 }
@@ -67,6 +73,17 @@ function rawImpBodyHTML(){
     <button class="btn btn-primary" ${canGo?'':'disabled'} onclick="rawImportRun()">開始匯入</button>
   </div>
   <div id="rawImpProgress"></div>`;
+}
+function rawDropFile(ev){
+  ev.preventDefault();
+  ev.currentTarget.classList.remove('over');
+  const dt = ev.dataTransfer;
+  const files = dt && dt.files ? Array.from(dt.files) : [];
+  if(!files.length) return;
+  if(files.length>1){ toast('一次只能匯入一個檔案，請一次拖一份進來',1); return }
+  const file = files[0];
+  if(!/\.(csv|xlsx|xls)$/i.test(file.name)){ toast('不支援這個檔案格式，只能匯入 .csv 或 .xlsx',1); return }
+  rawLoadFile(file);
 }
 async function rawLoadFile(file){
   try{
