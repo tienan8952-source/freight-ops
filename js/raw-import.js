@@ -19,10 +19,23 @@ let RAW_TYPES_LOADED=false, RAW_TYPES=[];
 let RAWIMP = {dataType:'', period:'', fileName:'', headers:[], rows:[], hash:'', dup:[], forceGo:false, running:false, done:0, total:0, ok:0, fails:[]};
 
 async function loadRawTypes(){
+  RAW_TYPES_LOADED = false;
   try{
-    const rows = await api('import_batches','GET',{query:'?select=data_type&order=data_type.asc'});
-    RAW_TYPES = [...new Set((rows||[]).map(r=>r.data_type).filter(Boolean))];
-  }catch(e){ RAW_TYPES = [] }
+    // 資料類型必須同時涵蓋「已匯入但尚未設定 mapping」與「已有 mapping」兩種來源。
+    // PostgREST/Supabase 前端不使用 SQL DISTINCT；先各自 select，再由 JS Set 去重。
+    const [batchRows, mappingRows] = await Promise.all([
+      api('import_batches','GET',{query:`?select=data_type&status=neq.${encodeURIComponent(RAW_REVOKED)}&order=data_type.asc`}),
+      api('field_mappings','GET',{query:'?select=data_type&order=data_type.asc'})
+    ]);
+    RAW_TYPES = [...new Set(
+      [...(batchRows||[]), ...(mappingRows||[])]
+        .map(r=>String(r.data_type||'').trim())
+        .filter(Boolean)
+    )].sort((a,b)=>a.localeCompare(b,'zh-Hant'));
+  }catch(e){
+    RAW_TYPES = [];
+    console.error('[loadRawTypes] 無法讀取資料類型；請檢查 import_batches / field_mappings SELECT RLS：', e);
+  }
   RAW_TYPES_LOADED = true;
 }
 async function fileSha256(file){
@@ -45,7 +58,7 @@ function rawImportHTML(){
     <div class="field c6"><label>所屬期間（可留白）</label>
       <input type="month" id="rawPeriod" value="${esc(RAWIMP.period)}" onchange="RAWIMP.period=this.value"></div>
     <div class="field c12"><label>選擇檔案（.csv 或 .xlsx）</label>
-      <input type="file" accept=".csv,.xlsx,.xls" onchange="if(this.files[0])rawLoadFile(this.files[0])"></div>
+      <input type="file" accept=".csv,.xlsx,.xls" onchange="if(this.files[0])processSelectedFile(this.files[0])"></div>
   </div>
   <div class="dropzone" id="rawDropzone" style="margin-top:12px"
     ondragover="event.preventDefault();this.classList.add('over')"
@@ -81,9 +94,15 @@ function rawDropFile(ev){
   const files = dt && dt.files ? Array.from(dt.files) : [];
   if(!files.length) return;
   if(files.length>1){ toast('一次只能匯入一個檔案，請一次拖一份進來',1); return }
-  const file = files[0];
-  if(!/\.(csv|xlsx|xls)$/i.test(file.name)){ toast('不支援這個檔案格式，只能匯入 .csv 或 .xlsx',1); return }
-  rawLoadFile(file);
+  processSelectedFile(files[0]);
+}
+async function processSelectedFile(file){
+  if(!file) return;
+  if(!/\.(csv|xlsx|xls)$/i.test(file.name||'')){
+    toast('不支援這個檔案格式，只能匯入 .csv 或 .xlsx',1);
+    return;
+  }
+  return rawLoadFile(file);
 }
 async function rawLoadFile(file){
   try{
