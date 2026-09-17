@@ -151,6 +151,15 @@ raw（JSONB，整列原始內容）、created_at。對 `raw` 建 GIN 索引，
 對 `batch_id` 建一般索引。整批撤銷＝刪除該批全部 `raw_records`（`import_batches`
 那筆紀錄保留、狀態改「已撤銷」）。
 
+### field_mappings（欄位對照設定）
+data_type（對應 `import_batches.data_type`）、source_field（原始欄位名，
+掃描該資料類型底下所有 `raw_records.raw` 出現過的 key）、display_name
+（顯示名稱）、sort_order（顯示順序）、type_hint（文字／數字／日期，只是
+提示不會自動轉型）、visible（是否顯示）。`(data_type, source_field)`
+唯一，畫面用 upsert（`on_conflict`）寫入。「資料顯示」畫面依這份設定
+把 `raw` 裡對應欄位撈出來呈現：查不到的欄位顯示「查無此欄」，型態跟
+`type_hint` 對不上的在該格標示異常，兩者都不會自動轉型或補值。
+
 ## 關聯圖（Mermaid）
 
 ```mermaid
