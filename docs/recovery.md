@@ -53,6 +53,13 @@
      .\scripts\restore-table.ps1 -Table vehicles -File <備份路徑>\vehicles.json
      # ...其餘表依此類推
      ```
+   - 原始層三張表在步驟 2 已由 `full-schema.sql` 建好，資料要依外鍵相依順序還原：先 `import_batches`，再 `raw_records`；`field_mappings` 沒有依賴其他原始層資料表，可以放在前後任一處。建議直接照下面順序跑：
+     ```powershell
+     .\scripts\restore-table.ps1 -Table field_mappings -File <備份路徑>\field_mappings.json
+     .\scripts\restore-table.ps1 -Table import_batches -File <備份路徑>\import_batches.json
+     .\scripts\restore-table.ps1 -Table raw_records -File <備份路徑>\raw_records.json
+     ```
+     `raw_records.batch_id` 必須對得到已還原的 `import_batches.id`；另外 `import_batches.imported_by` 會參照 `profiles.id`，如果新專案重新註冊後的 auth id 跟舊專案不同，要先把備份檔裡的 `imported_by` 改成對應的新 id，或改成 `null`，否則該批次會因外鍵約束而還原失敗。
    - `tasks`/`task_events`/`notifications`/`uploads` 因為關聯到 `profiles`(auth id)，會有跟上面 `profiles` 一樣的錯位問題，還原前要先確認關聯的使用者 id 對得起來
 4. **還原 Storage**：新專案先跑一次 `supabase/schema-v3.sql` 裡的 bucket 建立語法（已包含在 `full-schema.sql` 內），確認 `scans` bucket 存在後，把 `backups/storage/` 底下的檔案重新上傳（目前沒有自動化上傳腳本，檔案數量不多時手動用 Supabase 後台 Storage 頁面拖曳上傳即可；檔案很多的話屬於這包沒涵蓋的風險，見下方「風險」）
 5. **改前端設定**：`js/core.js` 開頭的 `SUPABASE_URL` 和 `ANON_KEY` 改成新專案的值，`.env` 的 `SUPABASE_URL`/`SUPABASE_SERVICE_KEY` 也改成新專案的
