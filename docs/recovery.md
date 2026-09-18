@@ -43,7 +43,7 @@
 「被暫停」（免費方案 7 天無活動）通常在後台按一下 Restore 就好，見 `docs/incident.md`。這裡講的是更嚴重的情況：**專案被刪掉或整個沒了**，要從零建一個新的。
 
 1. **建新的 Supabase 專案**，記下新的 Project URL 和 anon key、service_role key
-2. **重建 schema**：把 `supabase/full-schema.sql` 整份貼到新專案的 SQL Editor 執行一次
+2. **重建 schema**：把 `supabase/full-schema.sql` 整份貼到新專案的 SQL Editor 執行一次——這份檔案 2026-09-18 已補齊，現在真的是單檔可重建：除了原本就有的帳號／權限／流程／工作單／通知／檔案庫（schema-v2、v3）之外，也包含九張業務表（`vehicles`/`drivers`/`customers`/`trips`/`maint`/`petty`/`billing`/`insurance`/`docs`，這幾張表之前沒有留下建表 SQL，直接貼會在 RLS 那段報錯，現在已補上）以及原始層三張表（`import_batches`/`raw_records`/`field_mappings`）與 pg_cron 保活排程（schema-v4），一次貼上執行即可
 3. **還原資料**——這一步有個現實限制要先知道：`profiles` 表的每一列都用 `id` 外鍵參照 `auth.users(id)`，而 `auth.users` 是 Supabase Auth 自己管理的，新專案不會有舊的使用者帳號，所以**不能直接把舊的 `profiles.json` 塞進新專案**（外鍵會失敗，就算用 service_role 能繞過 RLS 也繞不過外鍵約束）。實務作法：
    - 讓每個使用者在新專案重新註冊一次（Email 要跟舊帳號一樣，這樣資料才對得起來），系統的「第一個註冊的人自動變 admin」規則會再跑一次，所以要先讓原本的管理員第一個註冊
    - 使用者都重新註冊、`profiles` 表有對應資料後，再用 `.\scripts\restore-table.ps1 -Table profiles -File <備份路徑>\profiles.json` 補回原本的 `role`/`status`/`perms`（會用「只補缺的 id」邏輯，不會跟新註冊產生的資料衝突，但如果 id 對不上——新註冊會產生新的 auth id——這一步實質上等於沒有作用，真正需要做的是照舊資料手動把每個人的權限重新設定一次，不能指望自動還原）
