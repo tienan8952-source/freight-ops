@@ -3,8 +3,8 @@
 本文件依 repo 現況（`supabase/schema-v2.sql`、`supabase/schema-v3.sql`、
 `js/core.js` 裡 `M` 物件的 `fields` 定義）整理，不是憑空編寫。業務表
 （`trips`/`maint`/`petty`/`billing`/`insurance`/`docs`/`vehicles`/`drivers`/
-`customers`）沒有留下 CREATE TABLE 的 SQL 檔（見 `docs/decisions.md`
-「建表時選 Run without RLS」那條），所以這幾張表的欄位定義以前端
+`customers`）沒有留下 CREATE TABLE 的 SQL 檔，只有 `schema-v2.sql` 裡
+假設表已存在、對這些表套用 RLS 的迴圈，所以這幾張表的欄位定義以前端
 `M` 物件為準——這也是系統實際讀寫資料庫時唯一依據的欄位清單。
 
 > 重要設計特徵：業務表與 `vehicles`/`drivers`/`customers` 之間**不是**
