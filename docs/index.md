@@ -43,6 +43,7 @@
 | 外接 AI 專案指示 | [briefs/03-外接AI.md](briefs/03-外接AI.md) |
 | Web 與 App 專案指示 | [briefs/04-Web與App.md](briefs/04-Web與App.md) |
 | 給 GPT 專案貼的交接說明（GPT 該做/不該做什麼） | [handoff-gpt.md](handoff-gpt.md) |
+| 目前進度快照，貼給外部 AI（Gemini、GPT）看 | [進度.md](進度.md) |
 | 「我想做 X」該用哪個工具、代價是什麼；Claude Code 能力明細 | [capabilities.md](capabilities.md) |
 
 第一次接觸這個 repo，建議看順序：根目錄 `README.md` → 這份文件地圖 →

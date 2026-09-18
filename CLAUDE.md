@@ -79,3 +79,23 @@ Title 要具體寫「我需要你做什麼」，不要只寫「需要協助」�
 介面文字繁體中文。金額用 Roboto Mono。車號一律黃牌樣式。
 日期 YYYY-MM-DD。新模組必須同時加：schema、RLS、權限鍵、
 選單、CSV 匯出、匯入對應、資料字典。
+
+## 進度同步
+
+每個任務包的最後一階段，除了驗證與回報，
+必須更新 docs/進度.md，讓它反映執行後的實際狀態。
+這份檔案是給看不到 repo 的外部 AI（Gemini、GPT）用的，
+必須自足、十行以內、可直接複製貼上。
+
+## 已否決的架構提案
+
+以下提案已評估並否決，若再次出現請提醒使用者：
+
+- ai-context/ 七檔 Shared AI Context（SHARED-AI-CONTEXT-001）
+- ai-handoffs/ 交接單資料夾與 pending/completed 歸檔流程
+- 多終端機協同、Single Writer / Reviewer 制度
+- 引入 Antigravity 作為執行者
+
+否決理由：與現有 docs/index.md、docs/briefs/、CLAUDE.md 功能重複，
+會出現兩份都自稱「唯一真相來源」的文件；且把一步操作變成五步，
+多出來的手續全落在使用者身上。
