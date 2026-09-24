@@ -2,3 +2,7 @@
 scripts/.session-id
 backups/
 .claude/
+!.claude/
+.claude/*
+!.claude/agents/
+!.claude/agents/*.md
