@@ -595,7 +595,7 @@ function donutSVG(parts){
     <text x="60" y="56" text-anchor="middle" font-size="18" font-weight="700" font-family="Roboto Mono,monospace" fill="var(--ink)">${total}</text>
     <text x="60" y="72" text-anchor="middle" font-size="10" fill="var(--mut)">張</text></svg>`;
 }
-function dashHTML(){
+function classicDashHTML(){
   const ms=monthStart(),td=today(),inM=r=>r.date>=ms&&r.date<=td;
   const sum=(a,k)=>a.reduce((x,r)=>x+(Number(r[k])||0),0);
   const mF=sum(CACHE.trips.filter(inM),'freight'),mM=sum(CACHE.maint.filter(inM),'amount'),mP=sum(CACHE.petty.filter(inM),'amount');
@@ -672,6 +672,58 @@ function dashHTML(){
 
   ${typeof backupReminderHTML==='function'?backupReminderHTML():''}
   <footer>資料存在 Supabase 雲端資料庫，登入同一組帳號就能看到同一份資料（依權限顯示）。</footer>`}
+
+
+/* 指揮中心首頁；舊總覽可隨時切回。 */
+function switchDashMode(mode){localStorage.setItem('fops.dashMode',mode);render()}
+function commandIsland(title,icon,accent,keys,note){
+  const links=keys.filter(k=>M[k]&&canSee(k));
+  if(!links.length)return '';
+  return `<section class="cc-island ${accent}">
+    <div class="cc-island-top"><span class="cc-icon">${icon}</span><div><b>${esc(title)}</b><small>${esc(note)}</small></div></div>
+    <div class="cc-links">${links.map(k=>`<button type="button" onclick="go('${k}')">${M[k].icon||'•'} ${esc(M[k].name)} <span>↗</span></button>`).join('')}</div>
+  </section>`;
+}
+function commandCentreHTML(){
+  const count=k=>(CACHE[k]||[]).length;
+  const due=count('insurance')?CACHE.insurance.filter(r=>{const d=daysTo(r.end);return d!==null&&d<=30}).length:0;
+  const todo=(typeof TASKS_LOADED!=='undefined'&&TASKS_LOADED&&typeof isTodoForMe==='function')
+    ?TASKS.filter(isTodoForMe):[];
+  const hasTasks=canSee('tasks');
+  const taskRows=hasTasks&&todo.length?todo.slice(0,8).map(t=>`<button type="button" class="cc-task" onclick="taskOpenDetail('${t.id}')"><span class="cc-task-dot"></span><span>${esc(t.title||t.name||'待處理工作')}</span><span>↗</span></button>`).join('')
+    :`<div class="cc-no-task">${hasTasks?'目前沒有待處理工作':'依帳號權限顯示工作'}</div>`;
+  return `<div class="cc">
+    <header class="cc-header"><div><div class="cc-eyebrow">FREIGHT OPS / COMMAND CENTRE</div><h1>貨運指揮中心</h1>
+      <p>從這裡走進每一項工作。點選區塊即可開啟現有模組。</p></div>
+      <div class="cc-actions"><span class="cc-live"><i></i> ${today()}</span>
+        <button type="button" onclick="refresh()">更新資料</button>
+        <button type="button" onclick="switchDashMode('classic')">原本總覽 ↗</button></div></header>
+    <div class="cc-layout"><div class="cc-map">
+      <div class="cc-orbit cc-orbit-one"></div><div class="cc-orbit cc-orbit-two"></div>
+      <div class="cc-centre"><span>🚛</span><strong>今日營運</strong><small>點選周圍模組進入工作</small></div>
+      <div class="cc-islands">
+        ${commandIsland('出車作業','🚚','pink',['trips','vehicles','drivers'],'報班・車輛・駕駛')}
+        ${commandIsland('帳務與單據','💰','gold',['billing','petty','payroll'],'對帳・支出・薪資')}
+        ${commandIsland('車隊管理','🔧','violet',['maint','insurance'],'維修・到期')}
+        ${commandIsland('資料與文件','📁','cyan',['customers','docs','files'],'客戶・公文・檔案')}
+        ${commandIsland('協作工作','📋','blue',['tasks','workflow','alerts'],'工作・流程・提醒')}
+      </div>
+      <div class="cc-pulse"><span>營運資料</span><b>${count('trips')}</b><small>筆出車報班</small></div>
+    </div>
+    <aside class="cc-rail"><div class="cc-rail-head"><small>WORKSPACE</small><h2>任務狀態</h2></div>
+      <div class="cc-mini"><div><span>待我處理</span><b>${hasTasks?todo.length:'—'}</b></div>
+        <div><span>30 天內到期</span><b>${canSee('insurance')?due:'—'}</b></div></div>
+      <div class="cc-rail-title"><strong>工作清單</strong>${hasTasks?'<button type="button" onclick="go(\'tasks\')">查看全部 ›</button>':''}</div>
+      <div class="cc-task-list">${taskRows}</div>
+      <div class="cc-rail-foot">這裡顯示現有資料；未設定的流程稍後再設計。</div>
+    </aside></div>
+  </div>`;
+}
+function dashHTML(){
+  return localStorage.getItem('fops.dashMode')==='classic'
+    ?`<div class="cc-classic-switch"><button type="button" onclick="switchDashMode('command')">✦ 切換指揮中心</button></div>`+classicDashHTML()
+    :commandCentreHTML();
+}
 
 /* ==================== 薪資 ==================== */
 function payrollHTML(){
