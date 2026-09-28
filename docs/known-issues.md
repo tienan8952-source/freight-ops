@@ -25,3 +25,11 @@
 - **影響**：在補這行之前，執行 `.\scripts\backup.ps1` 做的本機備份不會包含原始層三張新表的資料。雲端的 GitHub Actions 備份不受影響（已包含）。
 - **分類**：體驗瑕疵
 - **狀態**：待處理——下次修改 `scripts/backup.ps1`（例如下一個任務包或用 `/加資料表`／`/加欄位` 流程）時，把 `import_batches`、`raw_records`、`field_mappings` 加進 `$Tables`，`$SchemaVersion` 也要更新成有包含 schema-v4-raw-layer.sql。
+
+## 2026-09-29：main 被直接推了兩個首頁改動（沒走 PR）
+
+- **發現日期**：2026-09-29（盤點雲端資料、判斷與 GPT 是否衝突時發現）
+- **描述**：`8b54b19`、`0684cc9`（2026-09-28 04:47，英文 commit 訊息）直接推到 main，把首頁 `dashHTML()` 換成「貨運指揮中心」，舊總覽改成可切換的 `classicDashHTML()`，另在 `css/components.css` 加 47 行樣式。不是 Claude Code 做的，也沒有同步 `docs/進度.md`、使用者手冊。
+- **影響**：線上首頁已經是新版；之後若兩邊都改 `js/core.js` 首頁會互相覆蓋。
+- **分類**：不影響使用
+- **狀態**：待確認——不回退、不動 main。已依使用者決定改成按地點分工（見 `decisions.md` 2026-09-29），`docs/handoff-gpt.md` 補上「不要直接修改或 push freight-ops」。要不要保留這版首頁，等做 Web 預覽時一起決定。
