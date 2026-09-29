@@ -103,6 +103,8 @@ lockfile 裡的套件漏洞，這個專案的形狀讓它幾乎沒有可以抓�
 強制 PR（等有其他協作者加入、或想留審查紀錄時再評估）。
 什麼情況該重新檢討：專案開始有其他協作者加入、或前端開始用
 `package.json`／npm 套件依賴管理時。
+補充（2026-09-29）：仍然不加分支保護、不強制 PR。雲端 Claude Code 工作階段
+改走分支＋PR 是自律做法（見 2026-09-29「按地點分工」），不是改掉這條決定。
 
 ---
 
@@ -123,7 +125,8 @@ lockfile 裡的套件漏洞，這個專案的形狀讓它幾乎沒有可以抓�
 **2026-09-29｜為什麼 GPT 與 Claude Code 按地點分工**
 決定：GPT 負責規劃、Drive「AI架構」共用記憶與 Notion 工作台，不改
 freight-ops repo；Claude Code 只改 freight-ops（分支＋PR），不寫 Drive
-共用記憶與 Notion 工作台。
+共用記憶與 Notion 工作台。「分支＋PR」是 Claude Code 雲端工作階段的
+自律做法，main 仍不加分支保護、不強制 PR（2026-09-16 決定維持有效）。
 理由：兩邊同時做「Notion → 雲端 → Web」規劃時已出現重疊：freight-ops
 的 main 在 2026-09-28 被直接推了兩個首頁改動（不是 Claude Code 做的），
 Drive 共用記憶與 Notion 工作台也同時有人在寫。Google Doc、Notion 與同一個
