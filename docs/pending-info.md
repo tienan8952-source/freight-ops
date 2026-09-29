@@ -17,7 +17,7 @@
 
 - **出現在哪份文件**：`docs/tools/github.md`、`docs/config-snapshot.md`
 - **標記日期**：2026-09-16
-- **狀態**：**已回答**——使用者 2026-09-17 決定維持現況：Dependabot 不開、不強制 PR 流程（連帶不加分支保護）。理由已記進 [decisions.md](decisions.md)「為什麼不開 Dependabot、不強制 PR 流程」。
+- **狀態**：**已回答**——使用者 2026-09-17 決定維持現況：Dependabot 不開、不強制 PR 流程（連帶不加分支保護），理由已記進 [decisions.md](decisions.md)「為什麼不開 Dependabot、不強制 PR 流程」。雲端 Claude Code 工作階段則自律走分支＋PR 流程，理由見 [decisions.md](decisions.md) 2026-09-29 決策。
 
 ## 3. gh token 到期時間
 

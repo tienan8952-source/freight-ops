@@ -60,7 +60,7 @@
   - `secret_scanning_validity_checks` / `secret_scanning_non_provider_patterns`: disabled
 - **branch protection（main）**：目前**沒有設定**任何分支保護規則（`gh api .../branches/main/protection` 回 404 "Branch not protected"）
 - **merge 設定**：squash / merge commit / rebase merge 全部允許，`delete_branch_on_merge: false`
-- **是否要改用 PR 流程、要不要開 Dependabot、要不要加分支保護**：已決定維持現況——不開 Dependabot、不強制 PR 流程、不加分支保護。理由見 [decisions.md](decisions.md)「為什麼不開 Dependabot、不強制 PR 流程」。
+- **是否要改用 PR 流程、要不要開 Dependabot、要不要加分支保護**：已決定維持現況——不開 Dependabot、不強制 PR 流程、不加分支保護（理由見 [decisions.md](decisions.md)「為什麼不開 Dependabot、不強制 PR 流程」）。雲端 Claude Code 工作階段則自律走分支＋PR 流程（見 [decisions.md](decisions.md) 2026-09-29 決策）。
 - **GitHub Pages**：來源 `main` 分支、根目錄 `/`，狀態 `built`，網址 `https://tienan8952-source.github.io/freight-ops/`
 
 ## gh CLI / GitHub token

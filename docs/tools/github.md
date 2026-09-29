@@ -47,7 +47,4 @@
   push/`gh` 指令失敗（見 `docs/tools/gh-cli.md`）。
 
 ## 6. 未驗證／待確認
-- 是否已啟用 GitHub 的 Dependabot / secret scanning 之類的安全提醒
-  （public repo 通常預設有基本掃描，但未特別確認開啟項目）
-- 有沒有設定分支保護規則（目前直接 push 到 main，未驗證是否應該改用
-  PR 流程）
+- 無（原「Dependabot 開啟項目」與「分支保護與 PR 流程」已於 2026-09-17 驗證並由使用者決定維持現況，見 `docs/decisions.md`）
