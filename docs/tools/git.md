@@ -5,7 +5,8 @@
 復原。
 
 ## 2. 目前的設定
-- 單一分支開發：`main`，目前沒有使用 feature branch / PR 流程
+- 主要分支：`main`，沒有分支保護、不強制 PR；雲端 Claude Code 工作階段
+  自律走 feature branch＋PR（2026-09-29 起，見 `docs/decisions.md`）
 - `.gitignore` 排除：`.env`（Supabase service key）、
   `scripts/.session-id`（notify.ps1 的本機 session 識別碼）
 - 金鑰放哪：不涉及金鑰，push 認證由 gh CLI 管理（見
